@@ -25,6 +25,16 @@
     return o;
   }
 
+  /* --- Remplissage auto à partir du matériau / DN / PN -------------------- */
+  function fillConduite(_, vals, set) {
+    var mat = vals.materiau || 'PEHD PE100';
+    var m = R.materiaux.filter(function (x) { return x.nom === mat; })[0];
+    if (m) { set('eps', m.eps); set('Chw', m.Chw); }
+    var DN = +vals.DN || 200, PN = +vals.PN || 16;
+    set('Di', R.diInterieur(mat, DN, PN));
+  }
+  var MAT_OPTIONS = R.materiaux.map(function (m) { return m.nom; });
+
   /* --- Quantités par défaut des singularités (d'après le classeur) -------- */
   var FITTINGS_DEFAULT = R.singularites.map(function (s) {
     var n = 0;
@@ -77,44 +87,66 @@
           hint: 'Pour le coefficient de pointe' },
         { key: 'Veco', label: 'Vitesse économique visée', symbol: 'Véco', unit: 'm/s',
           default: 1.5, hint: '0,8–1,5 en refoulement' },
+        { key: 'materiau', label: 'Matériau', unit: '', type: 'select', wide: true,
+          options: MAT_OPTIONS, default: 'PEHD PE100', onPick: fillConduite,
+          hint: 'Remplit automatiquement ε, C et le Ø intérieur' },
+        { key: 'PN', label: 'Pression nominale', symbol: 'PN', unit: 'bar', type: 'select',
+          options: [6, 10, 16, 25], default: 16, onPick: fillConduite },
         { key: 'DN', label: 'Diamètre nominal', symbol: 'DN', unit: 'mm', type: 'select',
-          options: R.diametresNominaux, default: 200, hint: 'Série normalisée' },
+          options: R.diametresNominaux, default: 200, hint: 'Série normalisée', onPick: fillConduite },
         { key: 'Di', label: 'Diamètre intérieur réel', symbol: 'Di', unit: 'mm',
-          default: 150, hint: 'Selon fabricant' },
+          default: 150, hint: 'Auto selon matériau/PN — modifiable' },
         { key: 'L', label: 'Longueur de conduite', symbol: 'L', unit: 'm', default: 160 },
         { key: 'eps', label: 'Rugosité absolue', symbol: 'ε', unit: 'mm', default: 0.01,
-          step: 0.001, hint: 'PEHD 0,01 · Acier 0,05 · Fonte 0,1' },
+          step: 0.001, hint: 'Auto selon matériau — modifiable' },
+        { key: 'Chw', label: 'Coefficient Hazen-Williams', symbol: 'C', unit: '-', default: 150,
+          hint: 'Utilisé si méthode = Hazen-Williams' },
         { key: 'Zamont', label: 'Altitude amont', symbol: 'Zam', unit: 'm NGF', default: 25 },
         { key: 'Zaval', label: 'Altitude aval', symbol: 'Zav', unit: 'm NGF', default: 30 },
-        { key: 'methode', label: 'Méthode du coefficient λ', unit: '', type: 'select',
-          options: [ { value: 'swamee', label: 'Swamee-Jain (explicite)' },
-                     { value: 'colebrook', label: 'Colebrook-White (itératif)' } ],
+        { key: 'methode', label: 'Méthode de perte de charge', unit: '', type: 'select',
+          options: [ { value: 'swamee', label: 'Darcy — Swamee-Jain (explicite)' },
+                     { value: 'colebrook', label: 'Darcy — Colebrook-White (itératif)' },
+                     { value: 'hazen', label: 'Hazen-Williams' } ],
           default: 'swamee', wide: true }
       ],
       compute: function (v, store) {
         var nu = store.nu || C.viscositeCinematique(15);
         var Dth = C.diametreEconomique(v.Q, v.Veco);
-        var cond = C.conduite({ Q_m3h: v.Q, Di_mm: v.Di, L_m: v.L, eps_mm: v.eps,
-                                nu: nu, methode: v.methode });
+        var cond, methodeLabel, lambda;
+        if (v.methode === 'hazen') {
+          var hw = C.hazenWilliams(v.Q, v.Di, v.L, v.Chw);
+          cond = { S: hw.S, V: hw.V, Re: C.reynolds(hw.V, v.Di, nu),
+                   regime: C.regime(C.reynolds(hw.V, v.Di, nu)), lambda: NaN,
+                   J: hw.J, dHlin: hw.dHlin, vitesseOK: hw.V >= 0.5 && hw.V <= 2 };
+          methodeLabel = 'Hazen-Williams (C=' + v.Chw + ')'; lambda = NaN;
+        } else {
+          cond = C.conduite({ Q_m3h: v.Q, Di_mm: v.Di, L_m: v.L, eps_mm: v.eps,
+                              nu: nu, methode: v.methode });
+          methodeLabel = (v.methode === 'colebrook') ? 'Colebrook-White' : 'Swamee-Jain';
+          lambda = cond.lambda;
+        }
         var Hgeo = v.Zaval - v.Zamont;
         var Cp = v.Qmoy > 0 ? v.Q / v.Qmoy : NaN;
         var vStatus = cond.vitesseOK ? st('ok', 'OK') : st('warn', 'Hors 0,5–2 m/s');
+        var results = [
+          res('Coefficient de pointe', 'Cp', Cp, '-', 'Qp / Qmoy'),
+          res('Diamètre théorique', 'Dth', Dth, 'mm', '√(4Q/πV) — indicatif'),
+          res('Section hydraulique', 'S', cond.S, 'm²', 'π·Di²/4'),
+          res('Vitesse réelle', 'V', cond.V, 'm/s', 'Q / S', { status: vStatus, strong: true }),
+          res('Nombre de Reynolds', 'Re', cond.Re, '-', 'V·Di/ν'),
+          res('Régime d\'écoulement', '', cond.regime, '', 'selon Re')
+        ];
+        if (v.methode !== 'hazen')
+          results.push(res('Coefficient de frottement', 'λ', cond.lambda, '-', methodeLabel));
+        results.push(
+          res('Perte de charge unitaire', 'J', cond.J, 'm/m', methodeLabel),
+          res('Pertes linéaires totales', 'ΔHlin', cond.dHlin, 'm', 'J × L', { strong: true }),
+          res('Dénivellation géométrique', 'Hgéo', Hgeo, 'm', 'Zaval − Zamont')
+        );
         return {
-          results: [
-            res('Coefficient de pointe', 'Cp', Cp, '-', 'Qp / Qmoy'),
-            res('Diamètre théorique', 'Dth', Dth, 'mm', '√(4Q/πV) — indicatif'),
-            res('Section hydraulique', 'S', cond.S, 'm²', 'π·Di²/4'),
-            res('Vitesse réelle', 'V', cond.V, 'm/s', 'Q / S', { status: vStatus, strong: true }),
-            res('Nombre de Reynolds', 'Re', cond.Re, '-', 'V·Di/ν'),
-            res('Régime d\'écoulement', '', cond.regime, '', 'selon Re'),
-            res('Coefficient de frottement', 'λ', cond.lambda, '-',
-                v.methode === 'colebrook' ? 'Colebrook-White' : 'Swamee-Jain'),
-            res('Perte de charge unitaire', 'J', cond.J, 'm/m', 'λ·(1/D)·V²/2g'),
-            res('Pertes linéaires totales', 'ΔHlin', cond.dHlin, 'm', 'J × L', { strong: true }),
-            res('Dénivellation géométrique', 'Hgéo', Hgeo, 'm', 'Zaval − Zamont')
-          ],
+          results: results,
           publish: { Q: v.Q, Di: v.Di, V: cond.V, dHlin: cond.dHlin, L: v.L,
-                     Hgeo: Hgeo, eps: v.eps, nu: nu }
+                     Hgeo: Hgeo, eps: v.eps, nu: nu, lambda: lambda, Chw: v.Chw }
         };
       }
     },
@@ -148,19 +180,24 @@
           if (n > 0) rows.push([f.nom, ksi, n, C.round(k, 3), C.round(perte, 4)]);
         });
         var dHlin = store.dHlin || 0;
+        var lambda = store.lambda, Di = store.Di;
+        var Leq = (lambda > 0 && Di > 0) ? C.longueurEquivalente(ksiTotal, Di, lambda) : NaN;
         var tables = rows.length ? [{
           caption: 'Détail des singularités actives',
           headers: ['Singularité', 'ξ', 'Quantité', 'ξ·n', 'Perte (m)'],
           rows: rows
         }] : [];
+        var results = [
+          res('Terme cinétique', 'V²/2g', vh, 'm', 'V² / 2g'),
+          res('Somme des coefficients', 'Σξ', ksiTotal, '-', 'Σ(ξ·quantité)'),
+          res('Pertes singulières', 'ΔHsing', dHsing, 'm', 'Σξ · V²/2g', { strong: true }),
+          res('Pertes linéaires (rappel)', 'ΔHlin', dHlin, 'm', 'module Conduite'),
+          res('PERTES TOTALES', 'ΔHtot', dHlin + dHsing, 'm', 'ΔHlin + ΔHsing', { strong: true })
+        ];
+        if (isFinite(Leq))
+          results.push(res('Longueur équivalente', 'Leq', Leq, 'm', 'Σξ·D/λ — conduite équivalente'));
         return {
-          results: [
-            res('Terme cinétique', 'V²/2g', vh, 'm', 'V² / 2g'),
-            res('Somme des coefficients', 'Σξ', ksiTotal, '-', 'Σ(ξ·quantité)'),
-            res('Pertes singulières', 'ΔHsing', dHsing, 'm', 'Σξ · V²/2g', { strong: true }),
-            res('Pertes linéaires (rappel)', 'ΔHlin', dHlin, 'm', 'module Conduite'),
-            res('PERTES TOTALES', 'ΔHtot', dHlin + dHsing, 'm', 'ΔHlin + ΔHsing', { strong: true })
-          ],
+          results: results,
           tables: tables,
           publish: { dHsing: dHsing, dHtot: dHlin + dHsing }
         };
@@ -375,40 +412,51 @@
       intro: 'Capacité d\'une conduite circulaire à surface libre par la formule ' +
              'de Manning-Strickler, en section pleine ou partiellement remplie.',
       inputs: [
-        { key: 'D', label: 'Diamètre de la conduite', symbol: 'D', unit: 'mm', default: 300 },
+        { key: 'forme', label: 'Forme de la section', unit: '', type: 'select', wide: true,
+          options: [ { value: 'circulaire', label: 'Circulaire' },
+                     { value: 'rectangulaire', label: 'Rectangulaire' },
+                     { value: 'trapezoidale', label: 'Trapézoïdale' },
+                     { value: 'triangulaire', label: 'Triangulaire' } ],
+          default: 'circulaire' },
+        { key: 'D', label: 'Diamètre (circulaire)', symbol: 'D', unit: 'mm', default: 300 },
+        { key: 'taux', label: 'Taux de remplissage (circulaire)', unit: '-', default: 1, step: 0.05, hint: '1 = pleine section' },
+        { key: 'b', label: 'Largeur au fond (rect./trap.)', symbol: 'b', unit: 'm', default: 1 },
+        { key: 'y', label: 'Tirant d\'eau (ouverte)', symbol: 'y', unit: 'm', default: 0.5 },
+        { key: 'mtalus', label: 'Fruit des berges (H:V)', symbol: 'm', unit: '-', default: 1.5, hint: 'trap./triangulaire' },
         { key: 'I', label: 'Pente', symbol: 'I', unit: 'm/m', default: 0.005, step: 0.001, hint: '0,005 = 5 ‰' },
         { key: 'n', label: 'Coefficient de Manning', symbol: 'n', unit: '-', type: 'select',
           options: R.manning.map(function (m) { return { value: m.n, label: m.materiau + ' (n=' + m.n + ')' }; }),
-          default: 0.013, wide: true },
-        { key: 'taux', label: 'Taux de remplissage', unit: '-', default: 1, step: 0.05, hint: '1 = pleine section' }
+          default: 0.013, wide: true }
       ],
       compute: function (v) {
-        var n = +v.n;
-        var full = v.taux >= 1;
-        var m = full ? C.manningCirculairePlein(v.D, v.I, n)
-                     : C.manningCirculairePartiel(v.D, v.taux * v.D, v.I, n);
+        var n = +v.n, m, geo, formule, tables = [];
+        if (v.forme === 'circulaire') {
+          var full = v.taux >= 1;
+          m = full ? C.manningCirculairePlein(v.D, v.I, n)
+                   : C.manningCirculairePartiel(v.D, v.taux * v.D, v.I, n);
+          formule = full ? 'section pleine' : 'segment circulaire';
+          var rows = [];
+          for (var t = 0.1; t <= 1.001; t += 0.1) {
+            var mm = (t >= 1) ? C.manningCirculairePlein(v.D, v.I, n)
+                              : C.manningCirculairePartiel(v.D, t * v.D, v.I, n);
+            rows.push([C.round(t, 2), C.round(mm.V, 3), C.round(mm.Q_Ls, 1)]);
+          }
+          tables = [{ caption: 'Capacité selon le remplissage',
+                      headers: ['h/D', 'V (m/s)', 'Q (L/s)'], rows: rows }];
+        } else {
+          m = C.manningSection(v.forme, { b: v.b, y: v.y, m: v.mtalus }, v.I, n);
+          formule = v.forme;
+        }
         var vStatus = m.vitesseOK ? st('ok', 'OK') : st('warn', 'Hors 0,6–4 m/s');
         var results = [
-          res('Section mouillée', 'S', m.S, 'm²', full ? 'π·D²/4' : 'segment circulaire'),
+          res('Section mouillée', 'S', m.S != null ? m.S : m.A, 'm²', formule),
+          res('Périmètre mouillé', 'P', m.P, 'm', ''),
           res('Rayon hydraulique', 'Rh', m.Rh, 'm', 'S / P'),
           res('Vitesse', 'V', m.V, 'm/s', '(1/n)·Rh^⅔·√I', { status: vStatus, strong: true }),
           res('Débit capacité', 'Q', m.Q, 'm³/s', 'V · S'),
           res('Débit capacité', '', m.Q_Ls, 'L/s', '', { strong: true })
         ];
-        if (!full) results.splice(0, 0, res('Taux de remplissage', 'h/D', m.taux, '-', ''));
-        // courbe de capacité (remplissage 0,1 -> 1,0)
-        var rows = [];
-        for (var t = 0.1; t <= 1.001; t += 0.1) {
-          var mm = (t >= 1) ? C.manningCirculairePlein(v.D, v.I, n)
-                            : C.manningCirculairePartiel(v.D, t * v.D, v.I, n);
-          rows.push([C.round(t, 2), C.round(mm.V, 3), C.round(mm.Q_Ls, 1)]);
-        }
-        return {
-          results: results,
-          tables: [{ caption: 'Capacité selon le remplissage',
-                     headers: ['h/D', 'V (m/s)', 'Q (L/s)'], rows: rows }],
-          publish: { Qcapacite: m.Q_Ls }
-        };
+        return { results: results, tables: tables, publish: { Qcapacite: m.Q_Ls } };
       }
     },
 
@@ -452,21 +500,35 @@
       inputs: [
         { key: 'V', label: 'Volume utile à stocker', symbol: 'V', unit: 'm³', link: 'Vstockage', default: 250 },
         { key: 'h', label: 'Profondeur utile', symbol: 'h', unit: 'm', default: 1.5 },
+        { key: 'mtalus', label: 'Fruit des berges (H:V)', symbol: 'm', unit: '-', default: 2, hint: '0 = parois verticales' },
+        { key: 'ratio', label: 'Rapport Longueur/largeur', unit: '-', default: 1.5, step: 0.1 },
         { key: 'Qf', label: 'Débit de fuite', symbol: 'Qf', unit: 'L/s', default: 5 },
         { key: 'Cd', label: 'Coefficient de débit orifice', symbol: 'Cd', unit: '-', default: 0.62, step: 0.01 },
         { key: 'H', label: 'Charge sur l\'orifice', symbol: 'H', unit: 'm', default: 1.2 }
       ],
       compute: function (v) {
         var b = C.bassin({ V: v.V, h: v.h, Qf_Ls: v.Qf, Cd: v.Cd, H: v.H });
-        return {
-          results: [
-            res('Surface au miroir', 'S', b.Smiroir, 'm²', 'V / h'),
+        var results = [
+          res('Surface au miroir', 'S', b.Smiroir, 'm²', 'V / h'),
+          res('Diamètre de l\'orifice de fuite', 'd', b.dOrifice, 'mm', 'Q = Cd·A·√(2gH)', { strong: true }),
+          res('Temps de vidange théorique', 'tv', b.tempsVidange, 'h', 'V / Qf', { strong: true })
+        ];
+        if (+v.mtalus > 0) {
+          var bt = C.bassinTalusDepuisVolume(v.V, v.h, v.mtalus, v.ratio);
+          results.push(
+            res('— Bassin à talus —', '', '', '', ''),
+            res('Largeur au fond', 'l', bt.lb, 'm', 'tronc de pyramide'),
+            res('Longueur au fond', 'L', bt.Lb, 'm', 'L = ' + v.ratio + '·l'),
+            res('Largeur en gueule', '', bt.lhaut, 'm', 'l + 2·m·h'),
+            res('Longueur en gueule', '', bt.Lhaut, 'm', 'L + 2·m·h'),
+            res('Volume vérifié', 'V', bt.V, 'm³', '', { strong: true })
+          );
+        } else {
+          results.splice(1, 0,
             res('Largeur estimée (L = 2·l)', 'l', b.largeur, 'm', '√(S/2)'),
-            res('Longueur estimée', 'L', b.longueur, 'm', '2·l'),
-            res('Diamètre de l\'orifice de fuite', 'd', b.dOrifice, 'mm', 'Q = Cd·A·√(2gH)', { strong: true }),
-            res('Temps de vidange théorique', 'tv', b.tempsVidange, 'h', 'V / Qf', { strong: true })
-          ]
-        };
+            res('Longueur estimée', 'L', b.longueur, 'm', '2·l'));
+        }
+        return { results: results };
       }
     },
 

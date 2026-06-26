@@ -6,6 +6,8 @@
   <title>HydroCalc — Boîte à outils hydraulique</title>
   <meta name="description" content="Logiciel de calcul hydraulique : conduites, pertes de charge, pompage, coup de bélier, assainissement pluvial.">
   <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0e7490">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💧</text></svg>">
 </head>
 <body>
@@ -19,12 +21,20 @@
 
   <!-- Moteur de calcul (fonctions pures) -->
   <script src="assets/js/hydraulics.js"></script>
+  <script src="assets/js/hydraulics-ext.js"></script>
   <!-- Données de référence -->
   <script src="assets/js/references.js"></script>
+  <!-- Internationalisation -->
+  <script src="assets/js/i18n.js"></script>
   <!-- Helpers d'interface -->
   <script src="assets/js/ui.js"></script>
   <!-- Définition des modules -->
   <script src="assets/js/modules.js"></script>
+  <script src="assets/js/modules-ext.js"></script>
+  <!-- Sorties (note PDF, Excel, CSV) -->
+  <script src="assets/js/export.js"></script>
+  <!-- Import de classeurs Excel -->
+  <script src="assets/js/import-xlsx.js"></script>
   <!-- Application -->
   <script src="assets/js/app.js"></script>
 </body>

@@ -5,6 +5,7 @@
   'use strict';
 
   var Hydro = root.Hydro || (root.Hydro = {});
+  function T(s) { return (Hydro.i18n && typeof s === 'string') ? Hydro.i18n.t(s) : s; }
 
   /** Crée un élément DOM. tag, attrs (props/attributs), enfants (string|node|array). */
   function el(tag, attrs, children) {
@@ -83,6 +84,9 @@
         if (String(ov) === String(value)) opt.selected = true;
         input.appendChild(opt);
       });
+    } else if (def.type === 'text') {
+      input = el('input', { class: 'field-input', type: 'text',
+        value: value == null ? '' : value, dataset: { key: def.key } });
     } else {
       input = el('input', {
         class: 'field-input', type: 'number', step: def.step || 'any',
@@ -92,10 +96,10 @@
     if (opts.onInput) input.addEventListener('input', opts.onInput);
     if (opts.onChange) input.addEventListener('change', opts.onChange);
 
-    var labelText = def.label + (def.symbol ? '' : '');
+    var labelText = T(def.label);
     var symbolBadge = def.symbol ? el('span', { class: 'field-symbol' }, def.symbol) : null;
     var linkBadge = def.link ? el('span', {
-      class: 'field-link', title: 'Valeur liée à un autre module — modifiable'
+      class: 'field-link', title: T('Valeur liée à un autre module — modifiable')
     }, '🔗') : null;
 
     var unit = def.unit ? el('span', { class: 'field-unit' }, def.unit) : null;
@@ -103,7 +107,7 @@
     return el('div', { class: 'field' + (def.wide ? ' field--wide' : '') }, [
       el('label', { class: 'field-label' }, [labelText, ' ', symbolBadge, ' ', linkBadge]),
       el('div', { class: 'field-control' }, [input, unit]),
-      def.hint ? el('div', { class: 'field-hint' }, def.hint) : null
+      def.hint ? el('div', { class: 'field-hint' }, T(def.hint)) : null
     ]);
   }
 
@@ -113,15 +117,15 @@
     if (r.status) {
       var cls = r.status.kind === 'ok' ? 'badge--ok'
               : r.status.kind === 'warn' ? 'badge--warn' : 'badge--bad';
-      statusEl = el('span', { class: 'badge ' + cls }, r.status.text);
+      statusEl = el('span', { class: 'badge ' + cls }, T(r.status.text));
     }
     return el('div', { class: 'result' + (r.strong ? ' result--strong' : '') }, [
       el('div', { class: 'result-label' }, [
-        r.label,
+        T(r.label),
         r.symbol ? el('span', { class: 'result-symbol' }, r.symbol) : null
       ]),
       el('div', { class: 'result-value' }, [
-        el('span', { class: 'result-num' }, fmt(r.value, r.unit)),
+        el('span', { class: 'result-num' }, fmt(typeof r.value === 'string' ? T(r.value) : r.value, r.unit)),
         statusEl
       ]),
       r.formula ? el('div', { class: 'result-formula' }, r.formula) : null
@@ -131,7 +135,7 @@
   /** Tableau générique (en-têtes + lignes de cellules formatées). */
   function table(spec) {
     var thead = el('thead', null, el('tr', null,
-      spec.headers.map(function (h) { return el('th', null, h); })));
+      spec.headers.map(function (h) { return el('th', null, T(h)); })));
     var tbody = el('tbody', null, spec.rows.map(function (row, ri) {
       var cls = (spec.highlightRow != null && spec.highlightRow === ri) ? 'row--hl' : null;
       return el('tr', cls ? { class: cls } : null, row.map(function (c) {
@@ -140,7 +144,7 @@
       }));
     }));
     return el('table', { class: 'data-table' }, [
-      spec.caption ? el('caption', null, spec.caption) : null, thead, tbody
+      spec.caption ? el('caption', null, T(spec.caption)) : null, thead, tbody
     ]);
   }
 
@@ -189,13 +193,19 @@
   /** Dessine une courbe simple (réseau vs pompe) sur un canvas. */
   function chartXY(series, opts) {
     opts = opts || {};
-    var W = 560, H = 320, pad = 46;
+    var W = opts.width || 560, H = opts.height || 320, pad = 46;
     var cv = el('canvas', { width: W, height: H, class: 'chart' });
     var ctx = cv.getContext('2d');
     var xs = [], ys = [];
     series.forEach(function (s) { s.points.forEach(function (p) { xs.push(p.x); ys.push(p.y); }); });
     var xmin = 0, xmax = Math.max.apply(null, xs) * 1.05 || 1;
-    var ymin = 0, ymax = Math.max.apply(null, ys) * 1.1 || 1;
+    var ymax = Math.max.apply(null, ys) * 1.1 || 1;
+    var ymin = 0;
+    if (opts.autoY) {
+      ymin = Math.min.apply(null, ys);
+      var span = (ymax / 1.1 - ymin) || 1;
+      ymin -= span * 0.1; ymax = (ymax / 1.1) + span * 0.1;
+    }
     function X(x) { return pad + (x - xmin) / (xmax - xmin) * (W - 2 * pad); }
     function Y(y) { return H - pad - (y - ymin) / (ymax - ymin) * (H - 2 * pad); }
     // axes

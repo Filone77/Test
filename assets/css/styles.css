@@ -212,6 +212,68 @@ body {
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* --- Thème sombre --------------------------------------------------------- */
+[data-theme="sombre"] {
+  --bg: #0b1220; --surface: #111a2b; --ink: #e5eef7; --ink-soft: #9fb3c8;
+  --muted: #64748b; --line: #1e293b; --primary: #22d3ee; --primary-dark: #0e7490;
+  --primary-soft: #0c2230; --accent: #60a5fa; --ok-bg: #052e1a; --warn-bg: #3a2a08;
+  --bad-bg: #3a1212; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 16px rgba(0,0,0,.4);
+}
+[data-theme="sombre"] .data-table th { background: #0c1626; }
+[data-theme="sombre"] .field-input, [data-theme="sombre"] .grid-input,
+[data-theme="sombre"] .search-input { background: #0c1626; color: var(--ink); }
+[data-theme="sombre"] .topbar { background: linear-gradient(90deg, #06222b, #0a3543); }
+[data-theme="sombre"] .panel--result { background: linear-gradient(180deg, #0e1828, #111a2b); }
+
+/* --- Barre de recherche + sidebar ---------------------------------------- */
+.sidebar-wrap {
+  width: var(--sidebar-w); flex: 0 0 var(--sidebar-w);
+  height: calc(100vh - var(--top-h)); position: sticky; top: var(--top-h);
+  background: var(--surface); border-right: 1px solid var(--line);
+  display: flex; flex-direction: column;
+}
+.sidebar-wrap .sidebar { width: 100%; flex: 1 1 auto; border-right: 0; position: static; height: auto; }
+.search-box { padding: 12px 12px 6px; }
+.search-input {
+  width: 100%; padding: 8px 11px; border: 1px solid var(--line); border-radius: 8px;
+  font-family: inherit; font-size: 13.5px; background: #fff; color: var(--ink);
+}
+.search-input:focus { outline: none; border-color: var(--primary); }
+
+/* --- Sélecteur de langue -------------------------------------------------- */
+.lang-select {
+  background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28);
+  color: #fff; border-radius: 8px; padding: 6px 8px; font-size: 13px; cursor: pointer;
+}
+.lang-select option { color: #0f172a; }
+
+/* --- Menus déroulants ----------------------------------------------------- */
+.dropdown { position: relative; display: inline-block; }
+.menu {
+  display: none; position: absolute; top: calc(100% + 6px); right: 0; z-index: 50;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: var(--shadow); min-width: 210px; padding: 6px; overflow: hidden;
+}
+.dropdown.open .menu { display: block; }
+.menu-item {
+  display: flex; align-items: center; gap: 6px; width: 100%; text-align: left;
+  background: none; border: 0; padding: 9px 11px; border-radius: 7px; cursor: pointer;
+  font-family: inherit; font-size: 13.5px; color: var(--ink);
+}
+.menu-item:hover { background: var(--bg); }
+
+/* --- RTL (arabe) ---------------------------------------------------------- */
+[dir="rtl"] .sidebar-wrap { border-right: 0; border-left: 1px solid var(--line); }
+[dir="rtl"] .result-value { margin-left: 0; margin-right: auto; }
+[dir="rtl"] .menu { right: auto; left: 0; }
+[dir="rtl"] .field-unit { margin-left: 0; margin-right: 6px; }
+[dir="rtl"] .brand-sub { border-left: 0; border-right: 1px solid rgba(255,255,255,.35); padding-left: 0; padding-right: 10px; }
+[dir="rtl"] .nav-item, [dir="rtl"] .menu-item { text-align: right; }
+[dir="rtl"] .data-table th, [dir="rtl"] .data-table td { text-align: right; }
+
+/* --- Profil en long (canvas large) ---------------------------------------- */
+.profil-chart { width: 100%; }
+
 /* --- Impression ----------------------------------------------------------- */
 @media print {
   :root { --top-h: 0px; }
@@ -224,4 +286,25 @@ body {
   .col-result { width: 100%; }
   .module-header h2 { font-size: 18px; }
   a[href]:after { content: ""; }
+}
+
+/* --- Note de calcul (rapport imprimable) ---------------------------------- */
+.report { display: none; }
+.report-cover { text-align: center; padding: 28mm 0; }
+.report-logo { color: var(--primary-dark); font-weight: 700; font-size: 20px; letter-spacing: .02em; }
+.report h1 { font-size: 26px; margin: 18px 0 6px; }
+.report-projet { font-size: 20px; color: var(--ink); }
+.report-meta { margin-top: 26mm; font-size: 13px; color: var(--ink-soft); display: flex; gap: 40px; justify-content: center; }
+.report-section { margin-bottom: 14px; }
+.report-section h2 { font-size: 15px; border-bottom: 2px solid var(--primary); padding-bottom: 4px; margin: 16px 0 8px; }
+.report-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.report-table td { padding: 4px 8px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+.report-val { text-align: right; font-weight: 700; white-space: nowrap; }
+.report-formula { color: #9ca3af; font-family: ui-monospace, Menlo, monospace; font-size: 10.5px; }
+
+@media print {
+  .report { display: block; color: #111; }
+  body.printing-report > #app { display: none !important; }
+  .report-cover { page-break-after: always; }
+  .report-section { page-break-inside: avoid; }
 }
