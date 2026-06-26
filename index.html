@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HydroCalc — Boîte à outils hydraulique</title>
+  <meta name="description" content="Logiciel de calcul hydraulique : conduites, pertes de charge, pompage, coup de bélier, assainissement pluvial.">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💧</text></svg>">
+</head>
+<body>
+  <div id="app"></div>
+
+  <noscript>
+    <p style="padding:2rem;font-family:sans-serif">
+      Ce logiciel nécessite JavaScript. Activez-le puis rechargez la page.
+    </p>
+  </noscript>
+
+  <!-- Moteur de calcul (fonctions pures) -->
+  <script src="assets/js/hydraulics.js"></script>
+  <!-- Données de référence -->
+  <script src="assets/js/references.js"></script>
+  <!-- Helpers d'interface -->
+  <script src="assets/js/ui.js"></script>
+  <!-- Définition des modules -->
+  <script src="assets/js/modules.js"></script>
+  <!-- Application -->
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
