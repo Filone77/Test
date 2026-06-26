@@ -94,7 +94,82 @@
       nu20: 1e-6,         // m²/s à 20 °C
       patm: 101325,       // Pa
       pvap20: 2340        // Pa à 20 °C
-    }
+    },
+
+    /** Matériaux unifiés : rugosité ε (mm), module E (Pa), coef. Hazen-Williams
+     *  C, coef. de Manning n. Sert au remplissage automatique des champs. */
+    materiaux: [
+      { nom: 'PEHD PE100',   eps: 0.01,   E: 1e9,   Chw: 150, n: 0.009, sdr: { 6: 26, 10: 17, 16: 11, 25: 9 } },
+      { nom: 'PVC rigide',   eps: 0.01,   E: 3e9,   Chw: 150, n: 0.009, sdr: { 6: 41, 10: 26, 16: 21, 25: 13.6 } },
+      { nom: 'Fonte ductile',eps: 0.10,   E: 170e9, Chw: 130, n: 0.011, sdr: null },
+      { nom: 'Acier',        eps: 0.05,   E: 210e9, Chw: 120, n: 0.012, sdr: null },
+      { nom: 'Béton',        eps: 0.50,   E: 30e9,  Chw: 120, n: 0.013, sdr: null },
+      { nom: 'Cuivre',       eps: 0.0015, E: 120e9, Chw: 140, n: 0.010, sdr: null },
+      { nom: 'Inox',         eps: 0.015,  E: 200e9, Chw: 140, n: 0.011, sdr: null }
+    ],
+
+    /** Coefficients de Hazen-Williams C (rappel rapide). */
+    hazenWilliams: [
+      { materiau: 'PVC / PEHD neuf', C: 150 },
+      { materiau: 'Fonte ductile (ciment)', C: 130 },
+      { materiau: 'Acier neuf', C: 120 },
+      { materiau: 'Fonte ancienne', C: 100 },
+      { materiau: 'Béton', C: 120 },
+      { materiau: 'Acier rivé/ancien', C: 90 }
+    ],
+
+    /** Coefficients de ruissellement (méthode rationnelle / des pluies). */
+    ruissellement: [
+      { surface: 'Toiture', C: 0.90 },
+      { surface: 'Chaussée bitume / béton', C: 0.90 },
+      { surface: 'Pavés joints serrés', C: 0.70 },
+      { surface: 'Pavés joints larges', C: 0.50 },
+      { surface: 'Gravier compacté', C: 0.40 },
+      { surface: 'Zone urbaine dense', C: 0.70 },
+      { surface: 'Zone résidentielle', C: 0.40 },
+      { surface: 'Espaces verts / pelouse', C: 0.15 },
+      { surface: 'Forêt / prairie', C: 0.10 }
+    ],
+
+    /** Diamètre intérieur estimé (mm) selon matériau, DN et PN.
+     *  Plastiques : Di = DN·(1 − 2/SDR). Métaux/béton : Di ≈ DN. */
+    diInterieur: function (nomMateriau, DN, PN) {
+      var m = null;
+      for (var i = 0; i < this.materiaux.length; i++)
+        if (this.materiaux[i].nom === nomMateriau) m = this.materiaux[i];
+      if (m && m.sdr) {
+        var sdr = m.sdr[PN] || m.sdr[16] || 17;
+        return Math.round(DN * (1 - 2 / sdr) * 10) / 10;
+      }
+      return DN; // approximation métaux/béton
+    },
+
+    /** Cas-types pré-remplis (valeurs par module). */
+    casTypes: [
+      { nom: 'Refoulement eaux usées',
+        description: 'Poste de relevage vers exutoire — PEHD, vitesse 1 m/s.',
+        values: {
+          conduite: { Q: 120, Qmoy: 80, Veco: 1.0, DN: 160, Di: 141, L: 800, eps: 0.01, Zamont: 20, Zaval: 35 },
+          pompage: { Pres: 5, dHstation: 1.5, marge: 10, etaP: 0.65, etaM: 0.9, nService: 2, nSecours: 1 }
+        } },
+      { nom: 'Adduction AEP gravitaire',
+        description: 'Réservoir haut vers réservoir bas, écoulement gravitaire.',
+        values: {
+          conduite: { Q: 90, Qmoy: 60, Veco: 0.8, DN: 200, Di: 176, L: 2500, eps: 0.01, Zamont: 320, Zaval: 280 }
+        } },
+      { nom: 'Refoulement AEP',
+        description: 'Station de pompage AEP — fonte ductile, vitesse 1,2 m/s.',
+        values: {
+          conduite: { Q: 300, Qmoy: 200, Veco: 1.2, DN: 300, Di: 300, L: 1200, eps: 0.10, Zamont: 50, Zaval: 95 },
+          pompage: { Pres: 25, dHstation: 2, marge: 12, etaP: 0.78, etaM: 0.93, nService: 2, nSecours: 1 }
+        } },
+      { nom: 'Assainissement pluvial',
+        description: 'Bassin de rétention dimensionné par la méthode des pluies.',
+        values: {
+          pluies: { Sa: 3, a: 5.9, b: 0.62, q: 3 },
+          bassin: { h: 1.5, Qf: 9, Cd: 0.62, H: 1.2 }
+        } }
+    ]
   };
 
   if (typeof module !== 'undefined' && module.exports) {
