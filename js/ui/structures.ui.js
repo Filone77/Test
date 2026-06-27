@@ -84,6 +84,11 @@
       kpi('Flèche max', D.fmt(res.flecheMax.val, 2), 'mm', 'à ' + D.fmt(res.flecheMax.x, 2) + ' m') +
       '</div>';
     html += `<p class="muted">Équilibre vertical : ΣP = ${D.fmt(res.equilibre.sumLoads, 1)} kN, ΣR = ${D.fmt(res.equilibre.sumReac, 1)} kN ${res.equilibre.ok ? '✓' : '⚠'}</p>`;
+
+    // --- Vérification ELS de flèche, par travée ---
+    const limite = parseInt(D.val('st_limit'), 10) || 250;
+    html += verifFleche(res, model, limite);
+
     html += '<div id="st_schema" class="plotbox"></div>';
     html += '<div id="st_V" class="plotbox"></div>';
     html += '<div id="st_M" class="plotbox"></div>';
@@ -94,6 +99,39 @@
     GC.plot.diagram(D.$('#st_V'), res.diagram, { yKey: 'V', color: '#2e7d32', fill: 'rgba(46,125,50,0.12)', title: 'Effort tranchant V(x)', unit: 'kN' });
     GC.plot.diagram(D.$('#st_M'), res.diagram, { yKey: 'M', color: '#1b3a5b', fill: 'rgba(27,58,91,0.12)', title: 'Moment fléchissant M(x)', unit: 'kN·m', invert: true });
     GC.plot.diagram(D.$('#st_f'), res.diagram.map((d) => ({ x: d.x, v: d.v * 1000 })), { yKey: 'v', color: '#e08a1e', fill: 'rgba(224,138,30,0.12)', title: 'Déformée (flèche)', unit: 'mm', invert: true });
+  }
+
+  /** Vérification ELS de la flèche par travée (flèche admissible = portée / limite). */
+  function verifFleche(res, model, limite) {
+    const sup = model.supports.slice().sort((a, b) => a.x - b.x);
+    let global = 'OK';
+    const rows = [];
+    for (let i = 0; i < sup.length - 1; i++) {
+      const x1 = sup[i].x, x2 = sup[i + 1].x;
+      const L = x2 - x1;
+      // travée entre deux appuis (on ignore les segments en porte-à-faux 'libre')
+      const estTravee = sup[i].type !== 'libre' && sup[i + 1].type !== 'libre';
+      let fmax = 0;
+      res.diagram.forEach((d) => {
+        if (d.x >= x1 - 1e-6 && d.x <= x2 + 1e-6) {
+          if (Math.abs(d.v) > Math.abs(fmax)) fmax = d.v;
+        }
+      });
+      const fmm = Math.abs(fmax) * 1000; // mm
+      const adm = L * 1000 / limite; // mm
+      const ok = fmm <= adm;
+      if (estTravee && !ok) global = 'NOK';
+      rows.push([
+        'Travée ' + (i + 1) + (estTravee ? '' : ' (console)'),
+        D.fmt(L, 2) + ' m',
+        D.fmt(fmm, 2) + ' mm',
+        D.fmt(adm, 2) + ' mm',
+        estTravee ? D.badge(ok ? 'OK' : 'NOK') : '—'
+      ]);
+    }
+    let html = `<div class="result-head" style="margin-top:8px">${D.badge(global)}<h4>Vérification ELS — flèche (limite L/${limite})</h4></div>`;
+    html += D.table(['Travée', 'Portée L', 'Flèche f', 'f admissible', 'Statut'], rows);
+    return html;
   }
 
   function kpi(label, val, unit, sub) {

@@ -228,6 +228,85 @@
   }
 
   /**
+   * Dimensionnement d'une poutre en Té en flexion simple (ELU).
+   * Distingue axe neutre dans la table ou dans l'âme.
+   * @param {object} p
+   * @param {number} p.MEd  moment [kN·m]
+   * @param {number} p.beff largeur efficace de la table [mm]
+   * @param {number} p.bw   largeur de l'âme [mm]
+   * @param {number} p.hf   épaisseur de la table [mm]
+   * @param {number} p.h    hauteur totale [mm]
+   * @param {number} [p.d]  hauteur utile [mm]
+   * @param {number} p.fck, p.fyk
+   */
+  function flexionT(p) {
+    const beton = betonProps(p.fck, p.gammaC, p.alphaCC);
+    const acier = acierProps(p.fyk, p.gammaS);
+    const beff = p.beff, bw = p.bw, hf = p.hf, h = p.h;
+    const d = p.d != null ? p.d : 0.9 * h;
+    const fcd = beton.fcd, fyd = acier.fyd;
+    const M = p.MEd * 1e6; // N·mm
+
+    // 1) On suppose l'axe neutre dans la table : section rectangulaire beff
+    const mu = M / (beff * d * d * fcd);
+    const alpha = 1.25 * (1 - Math.sqrt(Math.max(0, 1 - 2 * mu)));
+    const x = alpha * d;
+
+    const result = {
+      hypotheses: { beff, bw, hf, h, d, fcd: round(fcd, 2), fyd: round(fyd, 1) },
+      mu: round(mu, 3),
+      x: round(x, 1),
+      messages: []
+    };
+
+    if (x <= hf) {
+      // Axe neutre dans la table → comportement rectangulaire (largeur beff)
+      const z = d * (1 - 0.4 * alpha);
+      const As = M / (z * fyd);
+      result.axeNeutre = 'table';
+      result.z = round(z, 1);
+      result.As = round(As, 0);
+      result.messages.push('Axe neutre dans la table (x ≤ hf) : calcul rectangulaire de largeur beff.');
+    } else {
+      // Axe neutre dans l'âme : débords de table + âme rectangulaire bw
+      const Mf = (beff - bw) * hf * fcd * (d - hf / 2); // N·mm repris par les débords
+      const Asf = (beff - bw) * hf * fcd / fyd;
+      const Mw = M - Mf;
+      const muw = Mw / (bw * d * d * fcd);
+      let Asw, zw, comprimes = false;
+      if (muw <= MU_LIM) {
+        const aw = 1.25 * (1 - Math.sqrt(Math.max(0, 1 - 2 * muw)));
+        zw = d * (1 - 0.4 * aw);
+        Asw = Mw / (zw * fyd);
+      } else {
+        comprimes = true;
+        const zlim = d * (1 - 0.4 * 0.617);
+        const Mlim = MU_LIM * bw * d * d * fcd;
+        const As2 = (Mw - Mlim) / ((d - 40) * fyd);
+        Asw = Mlim / (zlim * fyd) + As2;
+        zw = zlim;
+        result.AsComprime = round(As2, 0);
+      }
+      result.axeNeutre = 'ame';
+      result.Mf = round(Mf / 1e6, 1);
+      result.Mw = round(Mw / 1e6, 1);
+      result.Asf = round(Asf, 0);
+      result.Asw = round(Asw, 0);
+      result.z = round(zw, 1);
+      result.As = round(Asf + Asw, 0);
+      result.messages.push('Axe neutre dans l’âme (x > hf) : débords de table + âme rectangulaire bw.');
+      if (comprimes) result.messages.push('μ(âme) > μlim : aciers comprimés requis dans l’âme.');
+    }
+
+    const AsMin = Math.max(0.26 * beton.fctm / p.fyk * bw * d, 0.0013 * bw * d);
+    result.AsMin = round(AsMin, 0);
+    result.AsRetenu = round(Math.max(result.As, AsMin), 0);
+    result.choixBarres = choisirBarres(result.AsRetenu).slice(0, 5);
+    result.statut = 'OK';
+    return result;
+  }
+
+  /**
    * Diagramme d'interaction N-M d'un poteau rectangulaire à armatures
    * symétriques (As/2 sur chaque face). Flexion uniaxiale + effort normal.
    */
@@ -343,6 +422,7 @@
   return {
     MU_LIM,
     flexionSimple,
+    flexionT,
     effortTranchant,
     dalle,
     poteau,

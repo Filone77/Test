@@ -29,6 +29,7 @@
     });
     // Boutons de calcul béton
     D.$('#bf_calc').addEventListener('click', GC.modules.concrete.flexion);
+    D.$('#bT_calc').addEventListener('click', GC.modules.concrete.poutreT);
     D.$('#bt_calc').addEventListener('click', GC.modules.concrete.tranchant);
     D.$('#bp_calc').addEventListener('click', GC.modules.concrete.poteau);
     D.$('#bd_calc').addEventListener('click', GC.modules.concrete.dalle);
@@ -37,16 +38,27 @@
     GC.modules.structures.init();
     GC.modules.steel.init();
     GC.modules.quantities.init();
+    GC.modules.loads.init();
 
     // Premiers calculs béton (valeurs par défaut)
     GC.modules.concrete.flexion();
+    GC.modules.concrete.poutreT();
     GC.modules.concrete.tranchant();
     GC.modules.concrete.poteau();
     GC.modules.concrete.dalle();
 
+    // Boutons d'export de note de calcul (PDF)
+    D.$all('[data-export-res]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const card = btn.closest('.card');
+        const resEl = document.getElementById(btn.dataset.exportRes);
+        GC.report.fromForm(btn.dataset.exportTitle, card, resEl);
+      });
+    });
+
     // Vue initiale (depuis le hash éventuel)
     const start = (location.hash || '#accueil').slice(1);
-    showView(['accueil', 'beton', 'structures', 'acier', 'metre', 'apropos'].indexOf(start) >= 0 ? start : 'accueil');
+    showView(['accueil', 'beton', 'structures', 'acier', 'metre', 'charges', 'apropos'].indexOf(start) >= 0 ? start : 'accueil');
 
     // Boutons "Démarrer" de l'accueil
     D.$all('[data-goto]').forEach((b) => b.addEventListener('click', () => showView(b.dataset.goto)));

@@ -8,6 +8,7 @@ const beam = require('../js/engine/beam.js');
 const steel = require('../js/engine/steel.js');
 const profiles = require('../js/engine/profiles.js');
 const quantities = require('../js/engine/quantities.js');
+const loads = require('../js/engine/loads.js');
 
 let passed = 0, failed = 0;
 function check(label, got, expected, tol) {
@@ -41,6 +42,16 @@ console.log('Poteau 300×300, fck25, fyk500, NEd=1500, MEd=60');
 const pot = concrete.poteau({ b: 300, h: 300, fck: 25, fyk: 500, NEd: 1500, MEd: 60 });
 checkBool('faisable', pot.faisable, true);
 check('As ≥ As,min', pot.As >= pot.AsMin ? 1 : 0, 1, 0);
+
+console.log('Poutre en Té — axe neutre dans la table');
+const t1 = concrete.flexionT({ MEd: 300, beff: 800, bw: 200, hf: 100, h: 500, d: 450, fck: 25, fyk: 500 });
+checkBool('axe neutre = table', t1.axeNeutre === 'table', true);
+check('As (table) [mm²]', t1.As, 1630, 0.04);
+
+console.log('Poutre en Té — axe neutre dans l’âme');
+const t2 = concrete.flexionT({ MEd: 400, beff: 600, bw: 200, hf: 80, h: 500, d: 450, fck: 25, fyk: 500 });
+checkBool('axe neutre = âme', t2.axeNeutre === 'ame', true);
+check('As total (âme) [mm²]', t2.As, 2330, 0.05);
 
 console.log('\n=== RDM — poutre sur 2 appuis, L=6 m, w=10 kN/m, EI=10000 ===');
 const b1 = beam.solveBeam({
@@ -107,6 +118,19 @@ console.log('Métré : 4 poteaux 0.3×0.3×3 m');
 const m = quantities.metre([{ type: 'poteau', b: 0.3, h: 0.3, longueur: 3, nombre: 4 }]);
 check('Volume béton [m³]', m.totaux.beton, 1.08, 0.01); // 0.3·0.3·3·4 = 1.08
 check('Coffrage [m²]', m.totaux.coffrage, 14.4, 0.01); // 2·(0.6)·3·4 = 14.4
+
+console.log('\n=== CHARGES CLIMATIQUES (EN 1991) ===');
+console.log('Neige zone C1, altitude 300 m, toiture 15°');
+const nei = loads.neige({ zone: 'C1', altitude: 300, alpha: 15 });
+check('sk (avec altitude) [kN/m²]', nei.sk, 0.75, 0.02);
+check('μ1', nei.mu1, 0.8, 0.01);
+check('Charge neige s [kN/m²]', nei.s, 0.60, 0.03);
+
+console.log('Vent région 3 (vb0=26), terrain II, z=10 m');
+const ven = loads.vent({ region: 3, terrain: 'II', z: 10, cpe: 0.8 });
+check('vb [m/s]', ven.vb, 26, 0.01);
+check('qp(10 m) [kN/m²]', ven.qp, 0.994, 0.05);
+check('ce(z)', ven.ce, 2.35, 0.05);
 
 console.log(`\n===========================================`);
 console.log(`Résultat : ${passed} réussis, ${failed} échoués`);

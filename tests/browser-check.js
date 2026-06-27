@@ -40,12 +40,19 @@ const path = require('path');
   await page.click('#bp_calc');
   await page.waitForTimeout(300);
   await page.screenshot({ path: path.join(outDir, 'apercu-beton-poteau.png'), fullPage: true });
+  // Béton — poutre en Té
+  await page.click('[data-subtab="beton"][data-tab="poutreT"]');
+  await page.waitForTimeout(150);
+  await page.click('#bT_calc');
+  await page.waitForTimeout(200);
   // Structures
   await snap('structures', 'apercu-structures.png', async () => { await page.click('#st_solve'); });
   // Acier
   await snap('acier', 'apercu-acier.png', async () => { await page.click('#sa_compute'); });
   // Métré
   await snap('metre', 'apercu-metre.png', async () => { await page.click('#mq_compute'); await page.click('#mf_compute'); });
+  // Charges climatiques
+  await snap('charges', 'apercu-charges.png', async () => { await page.click('#cn_calc'); });
 
   // Contrôles de contenu
   const checks = {};
@@ -67,6 +74,23 @@ const path = require('path');
   await page.click('#mf_compute');
   await page.waitForTimeout(200);
   checks.fondation = await page.textContent('#mf_res');
+  // Poutre en Té
+  await page.click('.nav-item[data-view="beton"]');
+  await page.click('[data-subtab="beton"][data-tab="poutreT"]');
+  await page.click('#bT_calc');
+  await page.waitForTimeout(150);
+  checks.poutreT = await page.textContent('#bT_res');
+  // Charges
+  await page.click('.nav-item[data-view="charges"]');
+  await page.click('#cn_calc');
+  await page.click('[data-subtab="charges"][data-tab="vent"]');
+  await page.click('#cv_calc');
+  await page.waitForTimeout(150);
+  checks.neige = await page.textContent('#cn_res');
+  checks.vent = await page.textContent('#cv_res');
+  // Note de calcul (générateur PDF) — test de la fonction de construction
+  checks.report = await page.evaluate(() =>
+    GC.report.build('Test', [['a', 'b']], '<p>résultat</p>').indexOf('Note de calcul') >= 0);
 
   console.log('\n--- Vérifications de contenu ---');
   function has(label, txt, needle) {
@@ -77,10 +101,16 @@ const path = require('path');
   let ok = true;
   ok &= has('Béton/flexion', checks.flexion, 'As');
   ok &= has('Structures', checks.structures, 'Réactions');
+  ok &= has('Structures/ELS', checks.structures, 'flèche');
   console.log(`  ${svgCount >= 3 ? '✓' : '✗'} Structures : ${svgCount} graphiques SVG`);
   ok &= svgCount >= 3;
   ok &= has('Acier', checks.acier, 'Nb,Rd');
   ok &= has('Fondation', checks.fondation, 'Dimensions');
+  ok &= has('Poutre en Té', checks.poutreT, 'Té');
+  ok &= has('Neige', checks.neige, 'neige');
+  ok &= has('Vent', checks.vent, 'qp');
+  console.log(`  ${checks.report ? '✓' : '✗'} Export note de calcul (PDF)`);
+  ok &= checks.report;
 
   console.log('\n--- Erreurs JS détectées ---');
   if (errors.length === 0) console.log('  ✓ Aucune erreur console / page');

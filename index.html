@@ -22,6 +22,7 @@
       <div class="nav-item" data-view="structures"><span class="ico">⌇</span> Structures (RDM)</div>
       <div class="nav-item" data-view="acier"><span class="ico">⊥</span> Charpente acier</div>
       <div class="nav-item" data-view="metre"><span class="ico">∑</span> Métré &amp; Fondations</div>
+      <div class="nav-item" data-view="charges"><span class="ico">❄</span> Charges (neige/vent)</div>
       <div class="nav-item" data-view="apropos"><span class="ico">ⓘ</span> À propos</div>
     </nav>
     <div class="foot">v1.0 · EN 1992 / EN 1993<br />Outil d'avant-projet</div>
@@ -64,6 +65,11 @@
             <p>Quantités béton/acier/coffrage, estimation de coût, semelles isolées.</p>
             <span class="mc-tag">Avant-métré</span>
           </div>
+          <div class="module-card" data-goto="charges">
+            <div class="mc-ico">❄</div><h3>Charges climatiques</h3>
+            <p>Charge de neige et action du vent (pression de pointe), zones françaises.</p>
+            <span class="mc-tag">EN 1991</span>
+          </div>
         </div>
       </section>
 
@@ -74,6 +80,7 @@
 
         <div class="subtabs">
           <button class="subtab active" data-subtab="beton" data-tab="flexion">Flexion simple</button>
+          <button class="subtab" data-subtab="beton" data-tab="poutreT">Poutre en Té</button>
           <button class="subtab" data-subtab="beton" data-tab="tranchant">Effort tranchant</button>
           <button class="subtab" data-subtab="beton" data-tab="poteau">Poteau</button>
           <button class="subtab" data-subtab="beton" data-tab="dalle">Dalle</button>
@@ -95,9 +102,39 @@
                 <div class="field"><label>Acier fyk [MPa]</label>
                   <select id="bf_fyk"><option>400</option><option selected>500</option><option>600</option></select></div>
               </div>
-              <div class="btn-row"><button class="btn" id="bf_calc">Calculer</button></div>
+              <div class="btn-row">
+                <button class="btn" id="bf_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Béton armé — Flexion simple" data-export-res="bf_res">📄 Note PDF</button>
+              </div>
             </div>
             <div class="result" id="bf_res"></div>
+          </div>
+        </div>
+
+        <!-- Poutre en Té -->
+        <div class="subpanel" data-subpanel="beton" data-panel="poutreT">
+          <div class="grid2">
+            <div class="card">
+              <h3>Poutre en Té</h3>
+              <p class="desc">Flexion simple — axe neutre dans la table ou dans l'âme.</p>
+              <div class="form-grid">
+                <div class="field"><label>Moment MEd [kN·m]</label><input id="bT_MEd" type="number" value="400" /></div>
+                <div class="field"><label>Largeur table beff [mm]</label><input id="bT_beff" type="number" value="600" /></div>
+                <div class="field"><label>Largeur âme bw [mm]</label><input id="bT_bw" type="number" value="200" /></div>
+                <div class="field"><label>Épaisseur table hf [mm]</label><input id="bT_hf" type="number" value="80" /></div>
+                <div class="field"><label>Hauteur totale h [mm]</label><input id="bT_h" type="number" value="500" /></div>
+                <div class="field"><label>Hauteur utile d [mm]</label><input id="bT_d" type="number" value="450" /></div>
+                <div class="field"><label>Béton fck [MPa]</label>
+                  <select id="bT_fck"><option>20</option><option selected>25</option><option>30</option><option>35</option><option>40</option></select></div>
+                <div class="field"><label>Acier fyk [MPa]</label>
+                  <select id="bT_fyk"><option>400</option><option selected>500</option><option>600</option></select></div>
+              </div>
+              <div class="btn-row">
+                <button class="btn" id="bT_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Béton armé — Poutre en Té" data-export-res="bT_res">📄 Note PDF</button>
+              </div>
+            </div>
+            <div class="result" id="bT_res"></div>
           </div>
         </div>
 
@@ -117,7 +154,10 @@
                 <div class="field"><label>Acier fyk [MPa]</label>
                   <select id="bt_fyk"><option>400</option><option selected>500</option><option>600</option></select></div>
               </div>
-              <div class="btn-row"><button class="btn" id="bt_calc">Calculer</button></div>
+              <div class="btn-row">
+                <button class="btn" id="bt_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Béton armé — Effort tranchant" data-export-res="bt_res">📄 Note PDF</button>
+              </div>
             </div>
             <div class="result" id="bt_res"></div>
           </div>
@@ -140,7 +180,10 @@
                 <div class="field"><label>Acier fyk [MPa]</label>
                   <select id="bp_fyk"><option>400</option><option selected>500</option><option>600</option></select></div>
               </div>
-              <div class="btn-row"><button class="btn" id="bp_calc">Calculer</button></div>
+              <div class="btn-row">
+                <button class="btn" id="bp_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Béton armé — Poteau" data-export-res="bp_res">📄 Note PDF</button>
+              </div>
             </div>
             <div class="result" id="bp_res"></div>
           </div>
@@ -161,7 +204,10 @@
                 <div class="field"><label>Acier fyk [MPa]</label>
                   <select id="bd_fyk"><option>400</option><option selected>500</option><option>600</option></select></div>
               </div>
-              <div class="btn-row"><button class="btn" id="bd_calc">Calculer</button></div>
+              <div class="btn-row">
+                <button class="btn" id="bd_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Béton armé — Dalle" data-export-res="bd_res">📄 Note PDF</button>
+              </div>
             </div>
             <div class="result" id="bd_res"></div>
           </div>
@@ -175,7 +221,11 @@
         <div class="grid2">
           <div class="card">
             <h3>Modèle de poutre</h3>
-            <div class="field" style="max-width:200px"><label>Rigidité EI [kN·m²]</label><input id="st_EI" type="number" value="10000" /></div>
+            <div class="form-grid" style="max-width:380px">
+              <div class="field"><label>Rigidité EI [kN·m²]</label><input id="st_EI" type="number" value="10000" /></div>
+              <div class="field"><label>Limite de flèche ELS</label>
+                <select id="st_limit"><option value="250" selected>L/250 (planchers)</option><option value="300">L/300</option><option value="500">L/500 (cloisons fragiles)</option></select></div>
+            </div>
 
             <div class="subform-label">Appuis (position · type)</div>
             <div id="st_supports"></div>
@@ -189,7 +239,10 @@
             <div id="st_points"></div>
             <button class="add-btn" id="st_add_point">+ Ajouter une charge ponctuelle</button>
 
-            <div class="btn-row"><button class="btn ambre" id="st_solve">▶ Lancer le calcul</button></div>
+            <div class="btn-row">
+              <button class="btn ambre" id="st_solve">▶ Lancer le calcul</button>
+              <button class="btn ghost" data-export-title="Analyse de structures — RDM" data-export-res="st_res">📄 Note PDF</button>
+            </div>
           </div>
           <div class="result" id="st_res"></div>
         </div>
@@ -217,7 +270,10 @@
               <div class="field"><label>Moment MEd [kN·m]</label><input id="sa_MEd" type="number" value="" placeholder="optionnel" /></div>
               <div class="field"><label>Effort tranchant VEd [kN]</label><input id="sa_VEd" type="number" value="" placeholder="optionnel" /></div>
             </div>
-            <div class="btn-row"><button class="btn" id="sa_compute">Vérifier</button></div>
+            <div class="btn-row">
+              <button class="btn" id="sa_compute">Vérifier</button>
+              <button class="btn ghost" data-export-title="Charpente acier — Vérification de profilé" data-export-res="sa_res">📄 Note PDF</button>
+            </div>
           </div>
           <div class="result" id="sa_res"></div>
         </div>
@@ -238,7 +294,10 @@
             <div class="field"><label>Prix acier [€/kg]</label><input id="mq_prix_acier" type="number" value="1.5" /></div>
             <div class="field"><label>Prix coffrage [€/m²]</label><input id="mq_prix_coffrage" type="number" value="45" /></div>
           </div>
-          <div class="btn-row"><button class="btn" id="mq_compute">Calculer le métré</button></div>
+          <div class="btn-row">
+            <button class="btn" id="mq_compute">Calculer le métré</button>
+            <button class="btn ghost" data-export-title="Avant-métré quantitatif" data-export-res="mq_res">📄 Note PDF</button>
+          </div>
           <div class="result" id="mq_res" style="margin-top:18px"></div>
         </div>
 
@@ -256,9 +315,68 @@
               <div class="field"><label>Acier fyk [MPa]</label>
                 <select id="mf_fyk"><option>400</option><option selected>500</option></select></div>
             </div>
-            <div class="btn-row"><button class="btn" id="mf_compute">Dimensionner</button></div>
+            <div class="btn-row">
+              <button class="btn" id="mf_compute">Dimensionner</button>
+              <button class="btn ghost" data-export-title="Fondation — Semelle isolée" data-export-res="mf_res">📄 Note PDF</button>
+            </div>
           </div>
           <div class="result" id="mf_res"></div>
+        </div>
+      </section>
+
+      <!-- ---------- CHARGES CLIMATIQUES ---------- -->
+      <section class="view" id="view-charges">
+        <h2 class="section-title">Charges climatiques</h2>
+        <p class="section-sub">Charge de neige (EN 1991-1-3) et action du vent (EN 1991-1-4) — zones et régions françaises.</p>
+
+        <div class="subtabs">
+          <button class="subtab active" data-subtab="charges" data-tab="neige">❄ Neige</button>
+          <button class="subtab" data-subtab="charges" data-tab="vent">💨 Vent</button>
+        </div>
+
+        <!-- Neige -->
+        <div class="subpanel active" data-subpanel="charges" data-panel="neige">
+          <div class="grid2">
+            <div class="card">
+              <h3>Charge de neige sur toiture</h3>
+              <p class="desc">s = μ₁ · Ce · Ct · sk (EN 1991-1-3, Annexe Nationale française).</p>
+              <div class="form-grid">
+                <div class="field full"><label>Zone de neige</label><select id="cn_zone"></select></div>
+                <div class="field"><label>Altitude [m]</label><input id="cn_altitude" type="number" value="300" /></div>
+                <div class="field"><label>Pente toiture α [°]</label><input id="cn_alpha" type="number" value="15" /></div>
+                <div class="field"><label>Coefficient Ce</label><input id="cn_Ce" type="number" value="1.0" step="0.1" /></div>
+                <div class="field"><label>Coefficient Ct</label><input id="cn_Ct" type="number" value="1.0" step="0.1" /></div>
+                <div class="field full"><label>sk,0 imposé [kN/m²] (optionnel)</label><input id="cn_sk0" type="number" placeholder="auto selon zone" /></div>
+              </div>
+              <div class="btn-row">
+                <button class="btn" id="cn_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Charges — Neige (EN 1991-1-3)" data-export-res="cn_res">📄 Note PDF</button>
+              </div>
+            </div>
+            <div class="result" id="cn_res"></div>
+          </div>
+        </div>
+
+        <!-- Vent -->
+        <div class="subpanel" data-subpanel="charges" data-panel="vent">
+          <div class="grid2">
+            <div class="card">
+              <h3>Action du vent</h3>
+              <p class="desc">Pression dynamique de pointe qp(z) et pression sur paroi.</p>
+              <div class="form-grid">
+                <div class="field full"><label>Région de vent</label><select id="cv_region"></select></div>
+                <div class="field full"><label>Catégorie de terrain</label><select id="cv_terrain"></select></div>
+                <div class="field"><label>Hauteur z [m]</label><input id="cv_z" type="number" value="10" /></div>
+                <div class="field"><label>Coefficient cpe</label><input id="cv_cpe" type="number" value="0.8" step="0.1" /></div>
+                <div class="field"><label>Aire de référence [m²]</label><input id="cv_aire" type="number" value="1" /></div>
+              </div>
+              <div class="btn-row">
+                <button class="btn" id="cv_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Charges — Vent (EN 1991-1-4)" data-export-res="cv_res">📄 Note PDF</button>
+              </div>
+            </div>
+            <div class="result" id="cv_res"></div>
+          </div>
         </div>
       </section>
 
@@ -301,13 +419,16 @@
 <script src="js/engine/profiles.js"></script>
 <script src="js/engine/steel.js"></script>
 <script src="js/engine/quantities.js"></script>
+<script src="js/engine/loads.js"></script>
 <!-- Interface -->
 <script src="js/ui/dom.js"></script>
 <script src="js/ui/plot.js"></script>
+<script src="js/ui/report.js"></script>
 <script src="js/ui/concrete.ui.js"></script>
 <script src="js/ui/structures.ui.js"></script>
 <script src="js/ui/steel.ui.js"></script>
 <script src="js/ui/quantities.ui.js"></script>
+<script src="js/ui/loads.ui.js"></script>
 <script src="js/ui/app.js"></script>
 </body>
 </html>

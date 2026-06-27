@@ -108,6 +108,34 @@
     D.$('#bd_res').innerHTML = html;
   }
 
+  function poutreT() {
+    const r = GC.concrete.flexionT({
+      MEd: D.num('bT_MEd'), beff: D.num('bT_beff'), bw: D.num('bT_bw'),
+      hf: D.num('bT_hf'), h: D.num('bT_h'),
+      d: D.val('bT_d') ? D.num('bT_d') : undefined,
+      fck: D.num('bT_fck'), fyk: D.num('bT_fyk')
+    });
+    let html = `<div class="result-head">${D.badge(r.statut)}<h4>Poutre en Té — résultats</h4></div>`;
+    const rows = [
+      ['Moment réduit μ (sur beff)', D.fmt(r.mu, 3), '—'],
+      ['Position axe neutre x', D.fmt(r.x, 0), 'mm'],
+      ['Position de l’axe neutre', r.axeNeutre === 'table' ? 'dans la table' : 'dans l’âme', '—']
+    ];
+    if (r.axeNeutre === 'ame') {
+      rows.push(['Moment repris par la table Mf', D.fmt(r.Mf, 1), 'kN·m']);
+      rows.push(['Aciers débords Asf', D.fmt(r.Asf, 0), 'mm²']);
+      rows.push(['Moment repris par l’âme Mw', D.fmt(r.Mw, 1), 'kN·m']);
+      rows.push(['Aciers âme Asw', D.fmt(r.Asw, 0), 'mm²']);
+    }
+    rows.push(['Bras de levier z', D.fmt(r.z, 0), 'mm']);
+    rows.push(['<b>Section d’acier As totale</b>', '<b>' + D.fmt(r.As, 0) + '</b>', 'mm²']);
+    rows.push(['As,min / As retenu', D.fmt(r.AsMin, 0) + ' / ' + D.fmt(r.AsRetenu, 0), 'mm²']);
+    html += D.table(['Grandeur', 'Valeur', 'Unité'], rows);
+    html += '<h5>Choix d’armatures</h5>' + rowsFromBarres(r.choixBarres);
+    if (r.messages.length) html += '<ul class="notes">' + r.messages.map((m) => `<li>${m}</li>`).join('') + '</ul>';
+    D.$('#bT_res').innerHTML = html;
+  }
+
   GC.modules = GC.modules || {};
-  GC.modules.concrete = { flexion, tranchant, poteau, dalle };
+  GC.modules.concrete = { flexion, tranchant, poteau, dalle, poutreT };
 })();
