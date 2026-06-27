@@ -15,6 +15,9 @@ const retaining = require('../js/engine/retaining.js');
 const elements = require('../js/engine/elements.js');
 const vrd = require('../js/engine/vrd.js');
 const combos = require('../js/engine/combos.js');
+const pressure = require('../js/engine/pressure.js');
+const pumping = require('../js/engine/pumping.js');
+const validator = require('../js/engine/validator.js');
 
 let passed = 0, failed = 0;
 function check(label, got, expected, tol) {
@@ -188,6 +191,32 @@ const cb = combos.combinaisons({ G: 100, variables: [
 check('ELU max', cb.eluMax.valeur, 232.5, 0.01);
 check('ELS caractéristique max', cb.elsCMax.valeur, 165, 0.01);
 check('ELS quasi-permanente', cb.elsQMax.valeur, 115, 0.02);
+
+console.log('\n=== CONDUITE SOUS PRESSION ===');
+console.log('Q=50 L/s, DN200, L=500 m, PEHD, e=12 mm');
+const co = pressure.conduite({ Qls: 50, D: 200, L: 500, materiau: 'PEHD (PE100)', e: 12, Pservice: 6 });
+check('Vitesse [m/s]', co.V, 1.59, 0.02);
+check('Facteur de friction f (PEHD lisse, ks/D=5e-5)', co.f, 0.0148, 0.05);
+check('Perte de charge linéaire [m]', co.Jlin, 4.79, 0.05);
+check('Célérité [m/s]', co.celerite, 264, 0.05);
+check('Surpression coup de bélier [m]', co.surge, 42.8, 0.06);
+
+console.log('\n=== STATION DE POMPAGE ===');
+console.log('Q=100 m³/h, Hgeo=15, J=5 m, ηp=0.7, ηm=0.9, Z=10');
+const st = pumping.station({ Q: 100, Hgeo: 15, Jasp: 0.5, Jref: 4.5, etaPompe: 0.7, etaMoteur: 0.9, Z: 10, Hasp: 2, NPSHr: 3 });
+check('HMT [m]', st.HMT, 20, 0.01);
+check('Puissance électrique [kW]', st.Pelec, 8.65, 0.03);
+check('Volume utile bâche [m³]', st.Vu, 2.5, 0.01);
+check('NPSH disponible [m]', st.NPSHd, 7.59, 0.02);
+checkBool('cavitation OK', st.cavitationOk, true);
+
+console.log('\n=== VÉRIFICATEUR DE NOTE ===');
+const v1 = validator.verifier('ba_flexion', { MEd: 200, b: 300, h: 500, d: 450, fck: 25, fyk: 500, As_note: 1200 });
+checkBool('note conforme (As=1200 ≥ 1150)', v1.verdict === 'CONFORME', true);
+const v2 = validator.verifier('ba_flexion', { MEd: 200, b: 300, h: 500, d: 450, fck: 25, fyk: 500, As_note: 900 });
+checkBool('note non conforme (As=900 < 1150)', v2.verdict === 'NON CONFORME', true);
+const v3 = validator.verifier('canalisation', { Qls: 120, I: 0.005, K: 80, DN_note: 315 });
+checkBool('canalisation : verdict produit', typeof v3.verdict === 'string', true);
 
 console.log(`\n===========================================`);
 console.log(`Résultat : ${passed} réussis, ${failed} échoués`);

@@ -147,6 +147,15 @@ body {
 .badge { padding: 4px 11px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
 .badge-ok { background: #e3f3e4; color: var(--vert); }
 .badge-nok { background: #fbe4e1; color: var(--rouge); }
+.badge-warn { background: #fdf0d8; color: #b5710f; }
+
+/* Vérificateur de note */
+.verdict { padding: 14px 18px; border-radius: 10px; font-size: 1.1rem; font-weight: 800; letter-spacing: 0.3px; }
+.banner-ok { background: #e3f3e4; color: #1e6522; border: 1px solid #b6dfb9; }
+.banner-warn { background: #fdf0d8; color: #8a5a12; border: 1px solid #f0dcb8; }
+.banner-nok { background: #fbe4e1; color: #a3271a; border: 1px solid #f0c2bb; }
+.field.note-field input { background: #fff8ec; border-color: #f0dcb8; }
+.field.note-field label { color: #b5710f; }
 
 table.data { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 4px 0; }
 table.data th { text-align: left; background: #eef3fa; color: var(--bleu); padding: 7px 10px; font-weight: 600; border-bottom: 1px solid var(--bord); }

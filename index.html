@@ -26,8 +26,11 @@
       <div class="nav-item" data-view="geotech"><span class="ico">⛏</span> Géotech &amp; Blindage</div>
       <div class="nav-item" data-view="metre"><span class="ico">∑</span> Métré &amp; Fondations</div>
       <div class="nav-item" data-view="vrd"><span class="ico">⌳</span> VRD</div>
+      <div class="nav-item" data-view="conduite"><span class="ico">⊚</span> Conduite sous pression</div>
+      <div class="nav-item" data-view="pompage"><span class="ico">⏿</span> Station de pompage</div>
       <div class="nav-item" data-view="charges"><span class="ico">❄</span> Charges (neige/vent)</div>
       <div class="nav-item" data-view="combinaisons"><span class="ico">Σ</span> Combinaisons</div>
+      <div class="nav-item" data-view="validation"><span class="ico">✔</span> Vérif. note de calcul</div>
       <div class="nav-item" data-view="apropos"><span class="ico">ⓘ</span> À propos</div>
     </nav>
     <div class="foot">v1.0 · EN 1992 / EN 1993<br />Outil d'avant-projet</div>
@@ -99,6 +102,21 @@
             <div class="mc-ico">Σ</div><h3>Combinaisons</h3>
             <p>Génération automatique des combinaisons ELU / ELS.</p>
             <span class="mc-tag">EN 1990</span>
+          </div>
+          <div class="module-card" data-goto="conduite">
+            <div class="mc-ico">⊚</div><h3>Conduite sous pression</h3>
+            <p>Pertes de charge, Ø économique, coup de bélier, tenue de paroi.</p>
+            <span class="mc-tag">Darcy</span>
+          </div>
+          <div class="module-card" data-goto="pompage">
+            <div class="mc-ico">⏿</div><h3>Station de pompage</h3>
+            <p>HMT, puissances, volume de bâche, NPSH (cavitation).</p>
+            <span class="mc-tag">Hydraulique</span>
+          </div>
+          <div class="module-card" data-goto="validation">
+            <div class="mc-ico">✔</div><h3>Vérif. note de calcul</h3>
+            <p>Contrôle indépendant : verdict conforme / non conforme + corrections.</p>
+            <span class="mc-tag">Bureau de contrôle</span>
           </div>
         </div>
       </section>
@@ -669,6 +687,86 @@
         </div>
       </section>
 
+      <!-- ---------- CONDUITE SOUS PRESSION ---------- -->
+      <section class="view" id="view-conduite">
+        <h2 class="section-title">Conduite sous pression</h2>
+        <p class="section-sub">Dimensionnement hydraulique : vitesse, pertes de charge (Darcy-Weisbach / Colebrook), diamètre économique, coup de bélier et tenue de la paroi.</p>
+        <div class="grid2">
+          <div class="card">
+            <h3>Caractéristiques de la conduite</h3>
+            <div class="form-grid">
+              <div class="field"><label>Débit Q [L/s]</label><input id="pr_Qls" type="number" value="50" /></div>
+              <div class="field"><label>Diamètre intérieur D [mm]</label><input id="pr_D" type="number" value="200" /></div>
+              <div class="field"><label>Longueur L [m]</label><input id="pr_L" type="number" value="500" /></div>
+              <div class="field"><label>Matériau</label><select id="pr_materiau"></select></div>
+              <div class="field"><label>Épaisseur paroi e [mm]</label><input id="pr_e" type="number" value="12" /></div>
+              <div class="field"><label>Σ pertes singulières ξ</label><input id="pr_sumXi" type="number" value="3" /></div>
+              <div class="field"><label>Pression de service [bar]</label><input id="pr_Pservice" type="number" value="6" /></div>
+              <div class="field"><label>Temps fermeture vanne [s]</label><input id="pr_fermeture" type="number" value="0" /></div>
+            </div>
+            <div class="btn-row"><button class="btn" id="pr_calc">Calculer</button>
+              <button class="btn ghost" data-export-title="Conduite sous pression" data-export-res="pr_res">📄 Note PDF</button></div>
+          </div>
+          <div class="result" id="pr_res"></div>
+        </div>
+      </section>
+
+      <!-- ---------- STATION DE POMPAGE ---------- -->
+      <section class="view" id="view-pompage">
+        <h2 class="section-title">Station de pompage</h2>
+        <p class="section-sub">HMT, puissances, volume utile de la bâche (limitation des démarrages) et vérification de la cavitation (NPSH).</p>
+        <div class="grid2">
+          <div class="card">
+            <h3>Données de la station</h3>
+            <div class="form-grid">
+              <div class="field"><label>Débit Q [m³/h]</label><input id="pu_Q" type="number" value="100" /></div>
+              <div class="field"><label>Hauteur géométrique [m]</label><input id="pu_Hgeo" type="number" value="15" /></div>
+              <div class="field"><label>Pertes aspiration [m]</label><input id="pu_Jasp" type="number" value="0.5" /></div>
+              <div class="field"><label>Pertes refoulement [m]</label><input id="pu_Jref" type="number" value="4.5" /></div>
+              <div class="field"><label>Pression résiduelle [m]</label><input id="pu_Pres" type="number" value="0" /></div>
+              <div class="field"><label>Rendement pompe</label><input id="pu_etaPompe" type="number" value="0.7" step="0.05" /></div>
+              <div class="field"><label>Rendement moteur</label><input id="pu_etaMoteur" type="number" value="0.9" step="0.05" /></div>
+              <div class="field"><label>Démarrages max Z [/h]</label><input id="pu_Z" type="number" value="10" /></div>
+              <div class="field"><label>Hauteur aspiration Hs [m]</label><input id="pu_Hasp" type="number" value="2" /></div>
+              <div class="field"><label>NPSH requis [m]</label><input id="pu_NPSHr" type="number" value="3" /></div>
+              <div class="field"><label>Fonctionnement [h/j]</label><input id="pu_heures" type="number" value="8" /></div>
+              <div class="field"><label>Nombre de pompes</label><input id="pu_nPompes" type="number" value="2" /></div>
+            </div>
+            <div class="btn-row"><button class="btn" id="pu_calc">Calculer</button>
+              <button class="btn ghost" data-export-title="Station de pompage" data-export-res="pu_res">📄 Note PDF</button></div>
+          </div>
+          <div class="result" id="pu_res"></div>
+        </div>
+      </section>
+
+      <!-- ---------- VÉRIFICATEUR DE NOTE ---------- -->
+      <section class="view" id="view-validation">
+        <h2 class="section-title">Vérificateur de note de calcul</h2>
+        <p class="section-sub">Contrôle technique indépendant : l'outil recalcule, compare au résultat annoncé et rend un avis (conforme / avec réserves / non conforme) avec corrections.</p>
+        <div class="grid2">
+          <div class="card">
+            <h3>Note à contrôler</h3>
+            <div class="field"><label>Type de calcul</label>
+              <select id="va_type">
+                <option value="ba_flexion">Béton armé — flexion simple</option>
+                <option value="semelle">Fondation — semelle isolée</option>
+                <option value="soutenement">Soutènement — mur en T</option>
+                <option value="canalisation">VRD — canalisation</option>
+              </select>
+            </div>
+            <div class="subform-label">Coller la note (extraction automatique des valeurs)</div>
+            <textarea id="va_paste" rows="4" placeholder="Collez ici un extrait de la note : fck = 25, MEd = 200 kN·m, As = 1200 mm²…" style="width:100%; padding:9px 11px; border:1px solid var(--bord); border-radius:8px; font-family:inherit; font-size:0.9rem;"></textarea>
+            <div class="rowline" style="margin:6px 0"><button class="add-btn" id="va_extract">⤵ Extraire les valeurs</button>
+              <span id="va_extract_msg" class="muted" style="font-size:0.78rem"></span></div>
+            <div class="subform-label">Données &amp; valeurs annoncées (📝 = résultat de la note)</div>
+            <div id="va_fields"></div>
+            <div class="btn-row"><button class="btn ambre" id="va_verify">✔ Contrôler la note</button>
+              <button class="btn ghost" data-export-title="Vérification de note de calcul" data-export-res="va_res">📄 Note PDF</button></div>
+          </div>
+          <div class="result" id="va_res"></div>
+        </div>
+      </section>
+
       <!-- ---------- À PROPOS ---------- -->
       <section class="view" id="view-apropos">
         <h2 class="section-title">À propos</h2>
@@ -715,6 +813,9 @@
 <script src="js/engine/elements.js"></script>
 <script src="js/engine/vrd.js"></script>
 <script src="js/engine/combos.js"></script>
+<script src="js/engine/pressure.js"></script>
+<script src="js/engine/pumping.js"></script>
+<script src="js/engine/validator.js"></script>
 <!-- Interface -->
 <script src="js/ui/dom.js"></script>
 <script src="js/ui/plot.js"></script>
@@ -729,6 +830,9 @@
 <script src="js/ui/elements.ui.js"></script>
 <script src="js/ui/vrd.ui.js"></script>
 <script src="js/ui/combos.ui.js"></script>
+<script src="js/ui/pressure.ui.js"></script>
+<script src="js/ui/pumping.ui.js"></script>
+<script src="js/ui/validator.ui.js"></script>
 <script src="js/ui/app.js"></script>
 </body>
 </html>

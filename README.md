@@ -22,6 +22,9 @@ analytiques connues.
 | **Géotechnique & Blindage** | Rankine / Terzaghi-Peck | **Poussée des terres** (nappe, cohésion, surcharge) et **tranchée blindée** : HEB + bois (soldats, planches, butons) ou **caisson** |
 | **VRD** | Rationnelle / Manning-Strickler | **Assainissement pluvial** (Q=C·i·A), **canalisations** gravitaires (Ø requis, autocurage), **terrassement** de tranchée, **corps de chaussée** (CBR indicatif) |
 | **Combinaisons d'actions** | EN 1990 | Génération automatique des combinaisons **ELU fondamentales** et **ELS** (caractéristique, fréquente, quasi-permanente) avec coefficients ψ |
+| **Conduite sous pression** | Darcy-Weisbach | Vitesse, **pertes de charge** (Colebrook-White), diamètre économique, **coup de bélier** (célérité, Joukowsky), tenue de la paroi (contrainte / PN) |
+| **Station de pompage** | Hydraulique | **HMT**, puissances (hydraulique / arbre / électrique), **volume utile de bâche** (anti court-cycle), vérification de la **cavitation** (NPSH) |
+| **Vérificateur de note de calcul** | Contrôle croisé | **Recalcul indépendant** d'une note (BA flexion, semelle, soutènement, canalisation), **verdict** conforme / avec réserves / non conforme et **corrections** ; extraction des valeurs depuis un texte collé |
 
 Chaque module permet d'**exporter une note de calcul en PDF** (bouton « Note PDF »,
 via l'impression du navigateur) : en-tête, données d'entrée, résultats et avertissement.
@@ -43,7 +46,7 @@ L'application n'a **aucune dépendance** pour fonctionner. Deux possibilités :
 Le moteur de calcul est testable hors navigateur, sous Node.js :
 
 ```bash
-npm test            # 64 vérifications contre des résultats analytiques
+npm test            # 77 vérifications contre des résultats analytiques
 npm run test:browser  # rendu réel dans Chromium (Playwright) + captures
 ```
 
@@ -63,6 +66,9 @@ Exemples de cas vérifiés :
 - Dalle 2 sens 4×5 m, p=10 → **Mx=8,98**, My=5,35 kN·m/m
 - Pluvial C=0,8, i=60 mm/h, A=2 ha → **Q=267 L/s** ; Manning DN300 I=0,5% → 71 L/s
 - Combinaisons G=100, Q=50, S=20 → **ELU=232,5**, ELS car.=165
+- Conduite DN200 PEHD, Q=50 L/s → V=1,59 m/s, **célérité 264 m/s**, surge 42,8 m
+- Pompage Q=100 m³/h, HMT=20 m → **Pélec ≈ 8,65 kW**, bâche 2,5 m³, NPSHd 7,59 m
+- Vérificateur : note avec As=900 mm² (requis 1150) → **avis NON CONFORME**
 
 ## Architecture
 
@@ -83,6 +89,9 @@ js/engine/              MOTEUR DE CALCUL (pur, testable sous Node)
   elements.js           dalle 2 sens, semelle filante, voile
   vrd.js                assainissement, canalisations, terrassement
   combos.js             combinaisons ELU/ELS (EN 1990)
+  pressure.js           conduite sous pression (Darcy, coup de bélier)
+  pumping.js            station de pompage (HMT, NPSH)
+  validator.js          vérificateur de note de calcul
 js/ui/                  INTERFACE (navigateur)
   dom.js, plot.js       utilitaires + graphiques SVG
   report.js             génération de la note de calcul PDF

@@ -59,6 +59,11 @@ const path = require('path');
   await snap('vrd', 'apercu-vrd.png', async () => { await page.click('#vp_calc'); });
   await snap('elements', 'apercu-elements.png', async () => { await page.click('#el_calc'); });
   await snap('combinaisons', 'apercu-combinaisons.png', async () => { await page.click('#cb_calc'); });
+  await snap('conduite', 'apercu-conduite.png', async () => { await page.click('#pr_calc'); });
+  await snap('pompage', 'apercu-pompage.png', async () => { await page.click('#pu_calc'); });
+  await snap('validation', 'apercu-validation.png', async () => {
+    await page.selectOption('#va_type', 'ba_flexion'); await page.fill('#va_As_note', '900'); await page.click('#va_verify');
+  });
 
   // Contrôles de contenu
   const checks = {};
@@ -105,6 +110,13 @@ const path = require('path');
   checks.vrd = await page.textContent('#vp_res');
   await page.click('.nav-item[data-view="combinaisons"]'); await page.click('#cb_calc'); await page.waitForTimeout(120);
   checks.combos = await page.textContent('#cb_res');
+  await page.click('.nav-item[data-view="conduite"]'); await page.click('#pr_calc'); await page.waitForTimeout(120);
+  checks.conduite = await page.textContent('#pr_res');
+  await page.click('.nav-item[data-view="pompage"]'); await page.click('#pu_calc'); await page.waitForTimeout(120);
+  checks.pompage = await page.textContent('#pu_res');
+  await page.click('.nav-item[data-view="validation"]');
+  await page.selectOption('#va_type', 'ba_flexion'); await page.fill('#va_As_note', '900'); await page.click('#va_verify'); await page.waitForTimeout(120);
+  checks.validation = await page.textContent('#va_res');
   // Note de calcul (générateur PDF) — test de la fonction de construction
   checks.report = await page.evaluate(() =>
     GC.report.build('Test', [['a', 'b']], '<p>résultat</p>').indexOf('Note de calcul') >= 0);
@@ -133,6 +145,9 @@ const path = require('path');
   ok &= has('Éléments BA', checks.elements, 'deux sens');
   ok &= has('VRD', checks.vrd, 'Débit');
   ok &= has('Combinaisons', checks.combos, 'ELU');
+  ok &= has('Conduite', checks.conduite, 'lérité');
+  ok &= has('Pompage', checks.pompage, 'HMT');
+  ok &= has('Vérificateur', checks.validation, 'CONFORME');
 
   console.log('\n--- Erreurs JS détectées ---');
   if (errors.length === 0) console.log('  ✓ Aucune erreur console / page');
