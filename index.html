@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GéniCivil — Logiciel de calcul de génie civil (Eurocodes)</title>
+  <meta name="description" content="Logiciel de calcul de génie civil : béton armé (EC2), analyse de structures, charpente acier (EC3), métré et fondations." />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<div class="layout">
+
+  <!-- ===================== BARRE LATÉRALE ===================== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo"><span class="mark">▟</span> GéniCivil</div>
+      <div class="tagline">Calcul de structures · Eurocodes</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item" data-view="accueil"><span class="ico">⌂</span> Accueil</div>
+      <div class="nav-item" data-view="beton"><span class="ico">▦</span> Béton armé</div>
+      <div class="nav-item" data-view="structures"><span class="ico">⌇</span> Structures (RDM)</div>
+      <div class="nav-item" data-view="acier"><span class="ico">⊥</span> Charpente acier</div>
+      <div class="nav-item" data-view="metre"><span class="ico">∑</span> Métré &amp; Fondations</div>
+      <div class="nav-item" data-view="apropos"><span class="ico">ⓘ</span> À propos</div>
+    </nav>
+    <div class="foot">v1.0 · EN 1992 / EN 1993<br />Outil d'avant-projet</div>
+  </aside>
+
+  <!-- ===================== CONTENU PRINCIPAL ===================== -->
+  <div class="main">
+    <header class="topbar">
+      <h1>GéniCivil</h1>
+      <span class="ec">Calculs selon les Eurocodes (valeurs recommandées)</span>
+    </header>
+    <div class="content">
+
+      <!-- ---------- ACCUEIL ---------- -->
+      <section class="view" id="view-accueil">
+        <div class="hero">
+          <h2>Logiciel de calcul de génie civil</h2>
+          <p>Quatre modules complets pour l'avant-projet : dimensionnement du béton armé,
+             analyse de structures (RDM), vérification de la charpente métallique et
+             métré quantitatif avec fondations. Calculs conformes aux Eurocodes.</p>
+        </div>
+        <div class="modules-grid">
+          <div class="module-card" data-goto="beton">
+            <div class="mc-ico">▦</div><h3>Béton armé</h3>
+            <p>Flexion simple, effort tranchant, poteaux (interaction N-M), dalles.</p>
+            <span class="mc-tag">EN 1992-1-1</span>
+          </div>
+          <div class="module-card" data-goto="structures">
+            <div class="mc-ico">⌇</div><h3>Analyse de structures</h3>
+            <p>Poutres continues : réactions, efforts tranchants, moments, flèche.</p>
+            <span class="mc-tag">Éléments finis</span>
+          </div>
+          <div class="module-card" data-goto="acier">
+            <div class="mc-ico">⊥</div><h3>Charpente acier</h3>
+            <p>Profilés IPE/HEA/HEB : traction, flambement, flexion, cisaillement.</p>
+            <span class="mc-tag">EN 1993-1-1</span>
+          </div>
+          <div class="module-card" data-goto="metre">
+            <div class="mc-ico">∑</div><h3>Métré &amp; Fondations</h3>
+            <p>Quantités béton/acier/coffrage, estimation de coût, semelles isolées.</p>
+            <span class="mc-tag">Avant-métré</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- BÉTON ARMÉ ---------- -->
+      <section class="view" id="view-beton">
+        <h2 class="section-title">Béton armé — Eurocode 2</h2>
+        <p class="section-sub">Dimensionnement d'éléments en béton armé à l'état limite ultime (ELU).</p>
+
+        <div class="subtabs">
+          <button class="subtab active" data-subtab="beton" data-tab="flexion">Flexion simple</button>
+          <button class="subtab" data-subtab="beton" data-tab="tranchant">Effort tranchant</button>
+          <button class="subtab" data-subtab="beton" data-tab="poteau">Poteau</button>
+          <button class="subtab" data-subtab="beton" data-tab="dalle">Dalle</button>
+        </div>
+
+        <!-- Flexion -->
+        <div class="subpanel active" data-subpanel="beton" data-panel="flexion">
+          <div class="grid2">
+            <div class="card">
+              <h3>Poutre en flexion simple</h3>
+              <p class="desc">Section rectangulaire — calcul des aciers tendus.</p>
+              <div class="form-grid">
+                <div class="field"><label>Moment MEd [kN·m]</label><input id="bf_MEd" type="number" value="200" /></div>
+                <div class="field"><label>Largeur b [mm]</label><input id="bf_b" type="number" value="300" /></div>
+                <div class="field"><label>Hauteur h [mm]</label><input id="bf_h" type="number" value="500" /></div>
+                <div class="field"><label>Hauteur utile d [mm]</label><input id="bf_d" type="number" value="450" /></div>
+                <div class="field"><label>Béton fck [MPa]</label>
+                  <select id="bf_fck"><option>20</option><option selected>25</option><option>30</option><option>35</option><option>40</option><option>50</option></select></div>
+                <div class="field"><label>Acier fyk [MPa]</label>
+                  <select id="bf_fyk"><option>400</option><option selected>500</option><option>600</option></select></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="bf_calc">Calculer</button></div>
+            </div>
+            <div class="result" id="bf_res"></div>
+          </div>
+        </div>
+
+        <!-- Tranchant -->
+        <div class="subpanel" data-subpanel="beton" data-panel="tranchant">
+          <div class="grid2">
+            <div class="card">
+              <h3>Effort tranchant</h3>
+              <p class="desc">Treillis de bielles (Ritter-Mörsch) — armatures transversales.</p>
+              <div class="form-grid">
+                <div class="field"><label>Effort VEd [kN]</label><input id="bt_VEd" type="number" value="150" /></div>
+                <div class="field"><label>Largeur âme bw [mm]</label><input id="bt_bw" type="number" value="300" /></div>
+                <div class="field"><label>Hauteur utile d [mm]</label><input id="bt_d" type="number" value="450" /></div>
+                <div class="field"><label>Aciers longi. As [mm²]</label><input id="bt_As" type="number" value="1150" /></div>
+                <div class="field"><label>Béton fck [MPa]</label>
+                  <select id="bt_fck"><option>20</option><option selected>25</option><option>30</option><option>35</option><option>40</option><option>50</option></select></div>
+                <div class="field"><label>Acier fyk [MPa]</label>
+                  <select id="bt_fyk"><option>400</option><option selected>500</option><option>600</option></select></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="bt_calc">Calculer</button></div>
+            </div>
+            <div class="result" id="bt_res"></div>
+          </div>
+        </div>
+
+        <!-- Poteau -->
+        <div class="subpanel" data-subpanel="beton" data-panel="poteau">
+          <div class="grid2">
+            <div class="card">
+              <h3>Poteau (flexion composée)</h3>
+              <p class="desc">Aciers symétriques — diagramme d'interaction N-M.</p>
+              <div class="form-grid">
+                <div class="field"><label>Effort normal NEd [kN]</label><input id="bp_NEd" type="number" value="1500" /></div>
+                <div class="field"><label>Moment MEd [kN·m]</label><input id="bp_MEd" type="number" value="60" /></div>
+                <div class="field"><label>Largeur b [mm]</label><input id="bp_b" type="number" value="300" /></div>
+                <div class="field"><label>Hauteur h [mm]</label><input id="bp_h" type="number" value="300" /></div>
+                <div class="field"><label>Longueur libre l₀ [m]</label><input id="bp_l0" type="number" value="3" /></div>
+                <div class="field"><label>Béton fck [MPa]</label>
+                  <select id="bp_fck"><option>20</option><option selected>25</option><option>30</option><option>35</option><option>40</option><option>50</option></select></div>
+                <div class="field"><label>Acier fyk [MPa]</label>
+                  <select id="bp_fyk"><option>400</option><option selected>500</option><option>600</option></select></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="bp_calc">Calculer</button></div>
+            </div>
+            <div class="result" id="bp_res"></div>
+          </div>
+        </div>
+
+        <!-- Dalle -->
+        <div class="subpanel" data-subpanel="beton" data-panel="dalle">
+          <div class="grid2">
+            <div class="card">
+              <h3>Dalle pleine (1 sens porteur)</h3>
+              <p class="desc">Calcul par mètre de largeur — armatures principales.</p>
+              <div class="form-grid">
+                <div class="field"><label>Moment MEd [kN·m/m]</label><input id="bd_MEd" type="number" value="45" /></div>
+                <div class="field"><label>Épaisseur h [mm]</label><input id="bd_h" type="number" value="200" /></div>
+                <div class="field"><label>Enrobage [mm]</label><input id="bd_enrobage" type="number" value="25" /></div>
+                <div class="field"><label>Béton fck [MPa]</label>
+                  <select id="bd_fck"><option>20</option><option selected>25</option><option>30</option><option>35</option><option>40</option></select></div>
+                <div class="field"><label>Acier fyk [MPa]</label>
+                  <select id="bd_fyk"><option>400</option><option selected>500</option><option>600</option></select></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="bd_calc">Calculer</button></div>
+            </div>
+            <div class="result" id="bd_res"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- STRUCTURES (RDM) ---------- -->
+      <section class="view" id="view-structures">
+        <h2 class="section-title">Analyse de structures — RDM</h2>
+        <p class="section-sub">Poutre continue par la méthode des éléments finis (raideur directe). Définissez les appuis, les charges, puis lancez le calcul.</p>
+        <div class="grid2">
+          <div class="card">
+            <h3>Modèle de poutre</h3>
+            <div class="field" style="max-width:200px"><label>Rigidité EI [kN·m²]</label><input id="st_EI" type="number" value="10000" /></div>
+
+            <div class="subform-label">Appuis (position · type)</div>
+            <div id="st_supports"></div>
+            <button class="add-btn" id="st_add_support">+ Ajouter un appui</button>
+
+            <div class="subform-label">Charges réparties (x₁ · x₂ · w)</div>
+            <div id="st_dist"></div>
+            <button class="add-btn" id="st_add_dist">+ Ajouter une charge répartie</button>
+
+            <div class="subform-label">Charges ponctuelles (x · P)</div>
+            <div id="st_points"></div>
+            <button class="add-btn" id="st_add_point">+ Ajouter une charge ponctuelle</button>
+
+            <div class="btn-row"><button class="btn ambre" id="st_solve">▶ Lancer le calcul</button></div>
+          </div>
+          <div class="result" id="st_res"></div>
+        </div>
+      </section>
+
+      <!-- ---------- CHARPENTE ACIER ---------- -->
+      <section class="view" id="view-acier">
+        <h2 class="section-title">Charpente acier — Eurocode 3</h2>
+        <p class="section-sub">Vérification de profilés laminés (classes 1 et 2) : traction, flambement, flexion, cisaillement.</p>
+        <div class="grid2">
+          <div class="card">
+            <h3>Vérification d'un profilé</h3>
+            <div class="form-grid">
+              <div class="field"><label>Profilé</label><select id="sa_profil"></select></div>
+              <div class="field"><label>Nuance d'acier</label><select id="sa_nuance"></select></div>
+              <div class="field"><label>Mode</label>
+                <select id="sa_mode">
+                  <option value="compression" selected>Compression (flambement)</option>
+                  <option value="traction">Traction</option>
+                </select></div>
+              <div class="field"><label>Courbe de flambement</label>
+                <select id="sa_courbe"><option>a0</option><option>a</option><option selected>b</option><option>c</option><option>d</option></select></div>
+              <div class="field"><label>Longueur de flambement Lcr [m]</label><input id="sa_Lcr" type="number" value="3" /></div>
+              <div class="field"><label>Effort normal NEd [kN]</label><input id="sa_NEd" type="number" value="200" /></div>
+              <div class="field"><label>Moment MEd [kN·m]</label><input id="sa_MEd" type="number" value="" placeholder="optionnel" /></div>
+              <div class="field"><label>Effort tranchant VEd [kN]</label><input id="sa_VEd" type="number" value="" placeholder="optionnel" /></div>
+            </div>
+            <div class="btn-row"><button class="btn" id="sa_compute">Vérifier</button></div>
+          </div>
+          <div class="result" id="sa_res"></div>
+        </div>
+      </section>
+
+      <!-- ---------- MÉTRÉ & FONDATIONS ---------- -->
+      <section class="view" id="view-metre">
+        <h2 class="section-title">Métré &amp; Fondations</h2>
+        <p class="section-sub">Avant-métré quantitatif (béton, coffrage, acier, coût) et dimensionnement de semelles isolées.</p>
+
+        <div class="card">
+          <h3>Avant-métré</h3>
+          <p class="desc">type · b (ou épaisseur) · h · longueur · nombre — dimensions en mètres.</p>
+          <div id="mq_elements"></div>
+          <button class="add-btn" id="mq_add">+ Ajouter un élément</button>
+          <div class="form-grid" style="margin-top:16px; max-width:520px">
+            <div class="field"><label>Prix béton [€/m³]</label><input id="mq_prix_beton" type="number" value="130" /></div>
+            <div class="field"><label>Prix acier [€/kg]</label><input id="mq_prix_acier" type="number" value="1.5" /></div>
+            <div class="field"><label>Prix coffrage [€/m²]</label><input id="mq_prix_coffrage" type="number" value="45" /></div>
+          </div>
+          <div class="btn-row"><button class="btn" id="mq_compute">Calculer le métré</button></div>
+          <div class="result" id="mq_res" style="margin-top:18px"></div>
+        </div>
+
+        <div class="grid2">
+          <div class="card">
+            <h3>Semelle isolée (méthode des bielles)</h3>
+            <div class="form-grid">
+              <div class="field"><label>Charge ELU NEd [kN]</label><input id="mf_NEd" type="number" value="900" /></div>
+              <div class="field"><label>Charge ELS Nser [kN]</label><input id="mf_Nser" type="number" value="667" /></div>
+              <div class="field"><label>Contrainte sol σ [kPa]</label><input id="mf_sigma" type="number" value="200" /></div>
+              <div class="field"><label>Poteau a [m]</label><input id="mf_a" type="number" value="0.4" /></div>
+              <div class="field"><label>Poteau b [m]</label><input id="mf_b" type="number" value="0.4" /></div>
+              <div class="field"><label>Béton fck [MPa]</label>
+                <select id="mf_fck"><option>20</option><option selected>25</option><option>30</option></select></div>
+              <div class="field"><label>Acier fyk [MPa]</label>
+                <select id="mf_fyk"><option>400</option><option selected>500</option></select></div>
+            </div>
+            <div class="btn-row"><button class="btn" id="mf_compute">Dimensionner</button></div>
+          </div>
+          <div class="result" id="mf_res"></div>
+        </div>
+      </section>
+
+      <!-- ---------- À PROPOS ---------- -->
+      <section class="view" id="view-apropos">
+        <h2 class="section-title">À propos</h2>
+        <div class="prose">
+          <p><b>GéniCivil</b> est un logiciel de calcul de génie civil fonctionnant entièrement
+             dans le navigateur (aucune installation, aucune donnée envoyée à un serveur).
+             Le moteur de calcul est validé par une suite de tests automatisés comparés à des
+             solutions analytiques.</p>
+          <h3>Modules</h3>
+          <ul>
+            <li><b>Béton armé (EN 1992-1-1)</b> — flexion simple, effort tranchant, poteaux en flexion composée (diagramme d'interaction N-M), dalles.</li>
+            <li><b>Analyse de structures</b> — poutres continues par éléments finis : réactions, V(x), M(x), déformée.</li>
+            <li><b>Charpente acier (EN 1993-1-1)</b> — profilés IPE/HEA/HEB, traction, flambement par flexion, flexion, cisaillement.</li>
+            <li><b>Métré &amp; fondations</b> — avant-métré quantitatif et semelles isolées par la méthode des bielles.</li>
+          </ul>
+          <h3>Hypothèses</h3>
+          <p>Facteurs partiels : γ<sub>C</sub>=1,5 ; γ<sub>S</sub>=1,15 ; γ<sub>M0</sub>=γ<sub>M1</sub>=1,0.
+             Coefficients α<sub>cc</sub>=1,0. Calculs à l'ELU sauf mention contraire.</p>
+          <div class="disclaimer">
+            ⚠ <b>Avertissement :</b> outil d'aide à l'avant-projet à but pédagogique.
+            Les résultats doivent être vérifiés par un ingénieur qualifié et ne remplacent pas
+            une note de calcul réglementaire. Vérifiez toujours les hypothèses, les combinaisons
+            d'actions et les dispositions constructives propres à votre projet.
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SCRIPTS ===================== -->
+<!-- Moteur de calcul -->
+<script src="js/engine/core.js"></script>
+<script src="js/engine/concrete.js"></script>
+<script src="js/engine/beam.js"></script>
+<script src="js/engine/profiles.js"></script>
+<script src="js/engine/steel.js"></script>
+<script src="js/engine/quantities.js"></script>
+<!-- Interface -->
+<script src="js/ui/dom.js"></script>
+<script src="js/ui/plot.js"></script>
+<script src="js/ui/concrete.ui.js"></script>
+<script src="js/ui/structures.ui.js"></script>
+<script src="js/ui/steel.ui.js"></script>
+<script src="js/ui/quantities.ui.js"></script>
+<script src="js/ui/app.js"></script>
+</body>
+</html>
