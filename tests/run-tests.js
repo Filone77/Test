@@ -9,6 +9,12 @@ const steel = require('../js/engine/steel.js');
 const profiles = require('../js/engine/profiles.js');
 const quantities = require('../js/engine/quantities.js');
 const loads = require('../js/engine/loads.js');
+const geotech = require('../js/engine/geotech.js');
+const trench = require('../js/engine/trench.js');
+const retaining = require('../js/engine/retaining.js');
+const elements = require('../js/engine/elements.js');
+const vrd = require('../js/engine/vrd.js');
+const combos = require('../js/engine/combos.js');
 
 let passed = 0, failed = 0;
 function check(label, got, expected, tol) {
@@ -131,6 +137,57 @@ const ven = loads.vent({ region: 3, terrain: 'II', z: 10, cpe: 0.8 });
 check('vb [m/s]', ven.vb, 26, 0.01);
 check('qp(10 m) [kN/m²]', ven.qp, 0.994, 0.05);
 check('ce(z)', ven.ce, 2.35, 0.05);
+
+console.log('\n=== GÉOTECHNIQUE & BLINDAGE ===');
+console.log('Poussée active : H=5, γ=18, φ=30, q=10 (sans nappe)');
+const ge = geotech.pousseeActive({ H: 5, gamma: 18, phi: 30, q: 10 });
+check('Ka', ge.Ka, 0.333, 0.02);
+check('Poussée terres Psoil [kN/ml]', ge.Psoil, 75, 0.02);
+check('Poussée surcharge Pq [kN/ml]', ge.Pq, 16.67, 0.03);
+
+console.log('Tranchée blindée HEB+bois : H=4, B=3, φ=30, q=10');
+const bl = trench.blindageBois({ H: 4, B: 3, gamma: 18, phi: 30, q: 10, sH: 2, nButons: 2, heb: 'HEB 160', fy: 235 });
+check('Pression apparente sol [kPa]', bl.pression.pSoil, 15.6, 0.03);
+check('Effort buton [kN]', bl.buton.N, 75.7, 0.05);
+checkBool('blindage statut', bl.statut === 'OK', true);
+
+console.log('\n=== SOUTÈNEMENT (mur en T) ===');
+const mur = retaining.murEnT({ Hs: 4.5, ef: 0.5, eVoile: 0.5, patin: 0.8, talon: 1.7, gamma: 18, phi: 30, delta: 20, q: 10, sigmaAdm: 200, fck: 25, fyk: 500 });
+check('FS renversement', mur.renversement.FS, 2.69, 0.05);
+check('σ max sous semelle [kPa]', mur.poinconnement.sigMax, 144, 0.06);
+checkBool('poinçonnement OK', mur.poinconnement.ok, true);
+check('FS glissement', mur.glissement.FS, 0.99, 0.08);
+
+console.log('\n=== ÉLÉMENTS BA ===');
+console.log('Dalle 2 sens : lx=4, ly=5, p=10 kN/m²');
+const d2 = elements.dalle2sens({ lx: 4, ly: 5, p: 10, h: 200, enrobage: 25, fck: 25, fyk: 500 });
+check('α = lx/ly', d2.alpha, 0.8, 0.01);
+check('Mx [kN·m/m]', d2.Mx, 8.98, 0.03);
+check('My [kN·m/m]', d2.My, 5.35, 0.05);
+
+console.log('Voile porteur : NEd=800, hw=200, lo=3, fck25');
+const vo = elements.voile({ NEd: 800, hw: 200, lo: 3, e0: 20, fck: 25 });
+check('NRd [kN/ml]', vo.NRd, 1755, 0.05);
+checkBool('voile OK', vo.statut === 'OK', true);
+
+console.log('\n=== VRD ===');
+console.log('Pluvial rationnel : C=0.8, i=60 mm/h, A=2 ha');
+const pl = vrd.pluvialRationnel({ C: 0.8, i: 60, A: 2 });
+check('Débit Q [L/s]', pl.Qls, 266.7, 0.02);
+
+console.log('Canalisation Manning : D=300, I=0.005, K=80');
+const ca = vrd.canalisation({ Qls: 50, I: 0.005, K: 80, D: 300 });
+check('Vitesse pleine [m/s]', ca.impose.V, 1.006, 0.05);
+check('Capacité [L/s]', ca.impose.Q, 71, 0.05);
+
+console.log('\n=== COMBINAISONS (EN 1990) ===');
+const cb = combos.combinaisons({ G: 100, variables: [
+  { nom: 'Q', Q: 50, psi0: 0.7, psi1: 0.5, psi2: 0.3 },
+  { nom: 'S', Q: 30, psi0: 0.5, psi1: 0.2, psi2: 0.0 }
+] });
+check('ELU max', cb.eluMax.valeur, 232.5, 0.01);
+check('ELS caractéristique max', cb.elsCMax.valeur, 165, 0.01);
+check('ELS quasi-permanente', cb.elsQMax.valeur, 115, 0.02);
 
 console.log(`\n===========================================`);
 console.log(`Résultat : ${passed} réussis, ${failed} échoués`);

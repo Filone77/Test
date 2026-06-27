@@ -39,6 +39,11 @@
     GC.modules.steel.init();
     GC.modules.quantities.init();
     GC.modules.loads.init();
+    GC.modules.geotech.init();
+    GC.modules.retaining.init();
+    GC.modules.elements.init();
+    GC.modules.vrd.init();
+    GC.modules.combos.init();
 
     // Premiers calculs béton (valeurs par défaut)
     GC.modules.concrete.flexion();
@@ -58,7 +63,8 @@
 
     // Vue initiale (depuis le hash éventuel)
     const start = (location.hash || '#accueil').slice(1);
-    showView(['accueil', 'beton', 'structures', 'acier', 'metre', 'charges', 'apropos'].indexOf(start) >= 0 ? start : 'accueil');
+    const views = ['accueil', 'beton', 'elements', 'structures', 'acier', 'soutenement', 'geotech', 'metre', 'vrd', 'charges', 'combinaisons', 'apropos'];
+    showView(views.indexOf(start) >= 0 ? start : 'accueil');
 
     // Boutons "Démarrer" de l'accueil
     D.$all('[data-goto]').forEach((b) => b.addEventListener('click', () => showView(b.dataset.goto)));

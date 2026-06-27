@@ -19,10 +19,15 @@
     <nav class="nav">
       <div class="nav-item" data-view="accueil"><span class="ico">⌂</span> Accueil</div>
       <div class="nav-item" data-view="beton"><span class="ico">▦</span> Béton armé</div>
+      <div class="nav-item" data-view="elements"><span class="ico">▤</span> Éléments BA</div>
       <div class="nav-item" data-view="structures"><span class="ico">⌇</span> Structures (RDM)</div>
       <div class="nav-item" data-view="acier"><span class="ico">⊥</span> Charpente acier</div>
+      <div class="nav-item" data-view="soutenement"><span class="ico">◣</span> Soutènement</div>
+      <div class="nav-item" data-view="geotech"><span class="ico">⛏</span> Géotech &amp; Blindage</div>
       <div class="nav-item" data-view="metre"><span class="ico">∑</span> Métré &amp; Fondations</div>
+      <div class="nav-item" data-view="vrd"><span class="ico">⌳</span> VRD</div>
       <div class="nav-item" data-view="charges"><span class="ico">❄</span> Charges (neige/vent)</div>
+      <div class="nav-item" data-view="combinaisons"><span class="ico">Σ</span> Combinaisons</div>
       <div class="nav-item" data-view="apropos"><span class="ico">ⓘ</span> À propos</div>
     </nav>
     <div class="foot">v1.0 · EN 1992 / EN 1993<br />Outil d'avant-projet</div>
@@ -69,6 +74,31 @@
             <div class="mc-ico">❄</div><h3>Charges climatiques</h3>
             <p>Charge de neige et action du vent (pression de pointe), zones françaises.</p>
             <span class="mc-tag">EN 1991</span>
+          </div>
+          <div class="module-card" data-goto="elements">
+            <div class="mc-ico">▤</div><h3>Éléments BA</h3>
+            <p>Dalle portant deux sens, semelle filante, voile porteur.</p>
+            <span class="mc-tag">EN 1992</span>
+          </div>
+          <div class="module-card" data-goto="soutenement">
+            <div class="mc-ico">◣</div><h3>Soutènement</h3>
+            <p>Mur en T : stabilité (renversement, glissement, sol) et ferraillage.</p>
+            <span class="mc-tag">EC2 / EC7</span>
+          </div>
+          <div class="module-card" data-goto="geotech">
+            <div class="mc-ico">⛏</div><h3>Géotech &amp; Blindage</h3>
+            <p>Poussée des terres et tranchée blindée (HEB+bois, caisson).</p>
+            <span class="mc-tag">Terzaghi-Peck</span>
+          </div>
+          <div class="module-card" data-goto="vrd">
+            <div class="mc-ico">⌳</div><h3>VRD</h3>
+            <p>Assainissement pluvial, canalisations, terrassement, chaussée.</p>
+            <span class="mc-tag">Manning</span>
+          </div>
+          <div class="module-card" data-goto="combinaisons">
+            <div class="mc-ico">Σ</div><h3>Combinaisons</h3>
+            <p>Génération automatique des combinaisons ELU / ELS.</p>
+            <span class="mc-tag">EN 1990</span>
           </div>
         </div>
       </section>
@@ -380,6 +410,265 @@
         </div>
       </section>
 
+      <!-- ---------- ÉLÉMENTS BA ---------- -->
+      <section class="view" id="view-elements">
+        <h2 class="section-title">Éléments en béton armé</h2>
+        <p class="section-sub">Dalle portant deux sens, semelle filante, voile porteur (EN 1992-1-1).</p>
+        <div class="subtabs">
+          <button class="subtab active" data-subtab="elements" data-tab="dalle2">Dalle 2 sens</button>
+          <button class="subtab" data-subtab="elements" data-tab="filante">Semelle filante</button>
+          <button class="subtab" data-subtab="elements" data-tab="voile">Voile porteur</button>
+        </div>
+
+        <div class="subpanel active" data-subpanel="elements" data-panel="dalle2">
+          <div class="grid2">
+            <div class="card">
+              <h3>Dalle portant deux sens</h3>
+              <p class="desc">Dalle rectangulaire appuyée sur 4 côtés (coefficients μx, μy).</p>
+              <div class="form-grid">
+                <div class="field"><label>Portée lx [m]</label><input id="el_lx" type="number" value="4" /></div>
+                <div class="field"><label>Portée ly [m]</label><input id="el_ly" type="number" value="5" /></div>
+                <div class="field"><label>Charge p [kN/m²]</label><input id="el_p" type="number" value="10" /></div>
+                <div class="field"><label>Épaisseur h [mm]</label><input id="el_h" type="number" value="200" /></div>
+                <div class="field"><label>Enrobage [mm]</label><input id="el_enrobage" type="number" value="25" /></div>
+                <div class="field"><label>Béton fck</label><select id="el_fck"><option>20</option><option selected>25</option><option>30</option><option>35</option></select></div>
+                <div class="field"><label>Acier fyk</label><select id="el_fyk"><option>400</option><option selected>500</option></select></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="el_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Éléments BA — Dalle 2 sens" data-export-res="el_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="el_res"></div>
+          </div>
+        </div>
+
+        <div class="subpanel" data-subpanel="elements" data-panel="filante">
+          <div class="grid2">
+            <div class="card">
+              <h3>Semelle filante</h3>
+              <p class="desc">Sous un mur / voile — méthode des bielles.</p>
+              <div class="form-grid">
+                <div class="field"><label>Charge ELU Nu [kN/ml]</label><input id="ef_Nu" type="number" value="270" /></div>
+                <div class="field"><label>Charge ELS Nser [kN/ml]</label><input id="ef_Nser" type="number" value="200" /></div>
+                <div class="field"><label>Contrainte sol [kPa]</label><input id="ef_sigma" type="number" value="200" /></div>
+                <div class="field"><label>Largeur mur a [m]</label><input id="ef_a" type="number" value="0.2" /></div>
+                <div class="field"><label>Béton fck</label><select id="ef_fck"><option>20</option><option selected>25</option><option>30</option></select></div>
+                <div class="field"><label>Acier fyk</label><select id="ef_fyk"><option>400</option><option selected>500</option></select></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="ef_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Éléments BA — Semelle filante" data-export-res="ef_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="ef_res"></div>
+          </div>
+        </div>
+
+        <div class="subpanel" data-subpanel="elements" data-panel="voile">
+          <div class="grid2">
+            <div class="card">
+              <h3>Voile porteur</h3>
+              <p class="desc">Mur en béton sous charge verticale (EC2 §12.6.5.2).</p>
+              <div class="form-grid">
+                <div class="field"><label>Charge NEd [kN/ml]</label><input id="ev_NEd" type="number" value="800" /></div>
+                <div class="field"><label>Épaisseur hw [mm]</label><input id="ev_hw" type="number" value="200" /></div>
+                <div class="field"><label>Longueur flambement l₀ [m]</label><input id="ev_lo" type="number" value="3" /></div>
+                <div class="field"><label>Excentricité e₀ [mm]</label><input id="ev_e0" type="number" value="20" /></div>
+                <div class="field"><label>Béton fck</label><select id="ev_fck"><option>20</option><option selected>25</option><option>30</option><option>35</option></select></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="ev_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Éléments BA — Voile porteur" data-export-res="ev_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="ev_res"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- SOUTÈNEMENT ---------- -->
+      <section class="view" id="view-soutenement">
+        <h2 class="section-title">Soutènement &amp; ouvrages enterrés</h2>
+        <p class="section-sub">Mur de soutènement en T : stabilité externe (renversement, glissement, poinçonnement) et ferraillage.</p>
+        <div class="grid2">
+          <div class="card">
+            <h3>Mur en T</h3>
+            <div class="form-grid">
+              <div class="field"><label>Hauteur voile Hs [m]</label><input id="rt_Hs" type="number" value="4.5" /></div>
+              <div class="field"><label>Épaisseur semelle ef [m]</label><input id="rt_ef" type="number" value="0.5" /></div>
+              <div class="field"><label>Épaisseur voile [m]</label><input id="rt_eVoile" type="number" value="0.5" /></div>
+              <div class="field"><label>Patin avant [m]</label><input id="rt_patin" type="number" value="0.8" /></div>
+              <div class="field"><label>Talon arrière [m]</label><input id="rt_talon" type="number" value="1.7" /></div>
+              <div class="field"><label>γ sol [kN/m³]</label><input id="rt_gamma" type="number" value="18" /></div>
+              <div class="field"><label>φ sol [°]</label><input id="rt_phi" type="number" value="30" /></div>
+              <div class="field"><label>δ frottement base [°]</label><input id="rt_delta" type="number" value="20" /></div>
+              <div class="field"><label>Surcharge q [kPa]</label><input id="rt_q" type="number" value="10" /></div>
+              <div class="field"><label>σ sol admissible [kPa]</label><input id="rt_sigmaAdm" type="number" value="200" /></div>
+              <div class="field"><label>Béton fck</label><select id="rt_fck"><option>20</option><option selected>25</option><option>30</option></select></div>
+              <div class="field"><label>Acier fyk</label><select id="rt_fyk"><option>400</option><option selected>500</option></select></div>
+            </div>
+            <div class="btn-row"><button class="btn" id="rt_calc">Calculer</button>
+              <button class="btn ghost" data-export-title="Soutènement — Mur en T" data-export-res="rt_res">📄 Note PDF</button></div>
+          </div>
+          <div class="result" id="rt_res"></div>
+        </div>
+      </section>
+
+      <!-- ---------- GÉOTECH & BLINDAGE ---------- -->
+      <section class="view" id="view-geotech">
+        <h2 class="section-title">Géotechnique &amp; Tranchée blindée</h2>
+        <p class="section-sub">Poussée des terres et étaiement de fouille : blindage traditionnel HEB + bois, ou caisson.</p>
+        <div class="subtabs">
+          <button class="subtab active" data-subtab="geotech" data-tab="bois">HEB + bois</button>
+          <button class="subtab" data-subtab="geotech" data-tab="caisson">Caisson</button>
+        </div>
+
+        <div class="subpanel active" data-subpanel="geotech" data-panel="bois">
+          <div class="grid2">
+            <div class="card">
+              <h3>Blindage HEB + bois</h3>
+              <p class="desc">Soldats HEB verticaux, planches bois, butons. Pression apparente Terzaghi-Peck.</p>
+              <div class="form-grid">
+                <div class="field"><label>Profondeur H [m]</label><input id="tb_H" type="number" value="4" /></div>
+                <div class="field"><label>Largeur tranchée B [m]</label><input id="tb_B" type="number" value="3" /></div>
+                <div class="field"><label>γ sol [kN/m³]</label><input id="tb_gamma" type="number" value="18" /></div>
+                <div class="field"><label>φ sol [°]</label><input id="tb_phi" type="number" value="30" /></div>
+                <div class="field"><label>Surcharge q [kPa]</label><input id="tb_q" type="number" value="10" /></div>
+                <div class="field"><label>Hauteur nappe hw [m]</label><input id="tb_hw" type="number" value="0" /></div>
+                <div class="field"><label>Espacement soldats [m]</label><input id="tb_sH" type="number" value="2" /></div>
+                <div class="field"><label>Nombre de lits de butons</label><input id="tb_nButons" type="number" value="2" /></div>
+                <div class="field"><label>Profilé HEB</label><select id="tb_heb"></select></div>
+                <div class="field"><label>Nuance acier</label><select id="tb_fy"></select></div>
+                <div class="field"><label>Bois fm [MPa]</label><input id="tb_fmBois" type="number" value="24" /></div>
+                <div class="field"><label>Épaisseur planche [mm]</label><input id="tb_epPlanche" type="number" value="80" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="tb_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Tranchée blindée — HEB + bois" data-export-res="tb_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="tb_res"></div>
+          </div>
+        </div>
+
+        <div class="subpanel" data-subpanel="geotech" data-panel="caisson">
+          <div class="grid2">
+            <div class="card">
+              <h3>Blindage par caisson</h3>
+              <p class="desc">Vérification de la pression maximale vis-à-vis de la capacité du panneau.</p>
+              <div class="form-grid">
+                <div class="field"><label>Profondeur H [m]</label><input id="tc_H" type="number" value="3.5" /></div>
+                <div class="field"><label>γ sol [kN/m³]</label><input id="tc_gamma" type="number" value="18" /></div>
+                <div class="field"><label>φ sol [°]</label><input id="tc_phi" type="number" value="28" /></div>
+                <div class="field"><label>Surcharge q [kPa]</label><input id="tc_q" type="number" value="10" /></div>
+                <div class="field"><label>Hauteur nappe hw [m]</label><input id="tc_hw" type="number" value="1" /></div>
+                <div class="field"><label>Capacité caisson [kPa]</label><input id="tc_rating" type="number" value="50" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="tc_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Tranchée blindée — Caisson" data-export-res="tc_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="tc_res"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- VRD ---------- -->
+      <section class="view" id="view-vrd">
+        <h2 class="section-title">VRD — Voirie &amp; Réseaux Divers</h2>
+        <p class="section-sub">Assainissement pluvial, canalisations gravitaires, terrassement de tranchée, corps de chaussée.</p>
+        <div class="subtabs">
+          <button class="subtab active" data-subtab="vrd" data-tab="pluvial">Assainissement pluvial</button>
+          <button class="subtab" data-subtab="vrd" data-tab="canal">Canalisation</button>
+          <button class="subtab" data-subtab="vrd" data-tab="terr">Terrassement</button>
+          <button class="subtab" data-subtab="vrd" data-tab="chaussee">Chaussée</button>
+        </div>
+
+        <div class="subpanel active" data-subpanel="vrd" data-panel="pluvial">
+          <div class="grid2">
+            <div class="card">
+              <h3>Débit pluvial (méthode rationnelle)</h3>
+              <p class="desc">Q = C · i · A.</p>
+              <div class="form-grid">
+                <div class="field"><label>Coefficient ruissellement C</label><input id="vp_C" type="number" value="0.8" step="0.05" /></div>
+                <div class="field"><label>Intensité i [mm/h]</label><input id="vp_i" type="number" value="60" /></div>
+                <div class="field"><label>Surface A [ha]</label><input id="vp_A" type="number" value="2" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="vp_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="VRD — Débit pluvial" data-export-res="vp_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="vp_res"></div>
+          </div>
+        </div>
+
+        <div class="subpanel" data-subpanel="vrd" data-panel="canal">
+          <div class="grid2">
+            <div class="card">
+              <h3>Canalisation gravitaire</h3>
+              <p class="desc">Manning-Strickler — diamètre requis et vérification.</p>
+              <div class="form-grid">
+                <div class="field"><label>Débit à évacuer [L/s]</label><input id="vc_Qls" type="number" value="120" /></div>
+                <div class="field"><label>Pente I [m/m]</label><input id="vc_I" type="number" value="0.005" step="0.001" /></div>
+                <div class="field"><label>Strickler K</label><input id="vc_K" type="number" value="80" /></div>
+                <div class="field"><label>DN imposé [mm] (optionnel)</label><input id="vc_D" type="number" placeholder="ex. 400" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="vc_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="VRD — Canalisation" data-export-res="vc_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="vc_res"></div>
+          </div>
+        </div>
+
+        <div class="subpanel" data-subpanel="vrd" data-panel="terr">
+          <div class="grid2">
+            <div class="card">
+              <h3>Terrassement de tranchée</h3>
+              <p class="desc">Déblai, lit de pose, enrobage, remblai, évacuation.</p>
+              <div class="form-grid">
+                <div class="field"><label>Longueur L [m]</label><input id="vt_L" type="number" value="50" /></div>
+                <div class="field"><label>Largeur [m]</label><input id="vt_largeur" type="number" value="0.6" /></div>
+                <div class="field"><label>Profondeur [m]</label><input id="vt_profondeur" type="number" value="1.2" /></div>
+                <div class="field"><label>DN canalisation [mm]</label><input id="vt_DN" type="number" value="300" /></div>
+                <div class="field"><label>Lit de sable [m]</label><input id="vt_lit" type="number" value="0.1" /></div>
+                <div class="field"><label>Foisonnement</label><input id="vt_foison" type="number" value="1.3" step="0.05" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="vt_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="VRD — Terrassement" data-export-res="vt_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="vt_res"></div>
+          </div>
+        </div>
+
+        <div class="subpanel" data-subpanel="vrd" data-panel="chaussee">
+          <div class="grid2">
+            <div class="card">
+              <h3>Corps de chaussée (indicatif)</h3>
+              <p class="desc">Estimation préliminaire par la formule CBR.</p>
+              <div class="form-grid">
+                <div class="field"><label>Charge par roue P [t]</label><input id="vch_P" type="number" value="6.5" step="0.5" /></div>
+                <div class="field"><label>Indice portant CBR [%]</label><input id="vch_CBR" type="number" value="10" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="vch_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="VRD — Chaussée" data-export-res="vch_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="vch_res"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- COMBINAISONS ---------- -->
+      <section class="view" id="view-combinaisons">
+        <h2 class="section-title">Combinaisons d'actions</h2>
+        <p class="section-sub">Génération automatique des combinaisons ELU et ELS (EN 1990). Saisissez une grandeur caractéristique (charge, moment, effort…) par action.</p>
+        <div class="grid2">
+          <div class="card">
+            <h3>Actions</h3>
+            <div class="field" style="max-width:220px"><label>Action permanente G</label><input id="cb_G" type="number" value="100" /></div>
+            <div class="subform-label">Actions variables (nom · Qk · ψ₀ · ψ₁ · ψ₂)</div>
+            <div id="cb_vars"></div>
+            <div class="rowline" style="margin-top:8px">
+              <select id="cb_preset" class="mini" style="width:200px"></select>
+              <button class="add-btn" id="cb_add">+ Ajouter (catégorie ψ)</button>
+            </div>
+            <div class="btn-row"><button class="btn" id="cb_calc">Générer les combinaisons</button>
+              <button class="btn ghost" data-export-title="Combinaisons d'actions (EN 1990)" data-export-res="cb_res">📄 Note PDF</button></div>
+          </div>
+          <div class="result" id="cb_res"></div>
+        </div>
+      </section>
+
       <!-- ---------- À PROPOS ---------- -->
       <section class="view" id="view-apropos">
         <h2 class="section-title">À propos</h2>
@@ -420,6 +709,12 @@
 <script src="js/engine/steel.js"></script>
 <script src="js/engine/quantities.js"></script>
 <script src="js/engine/loads.js"></script>
+<script src="js/engine/geotech.js"></script>
+<script src="js/engine/trench.js"></script>
+<script src="js/engine/retaining.js"></script>
+<script src="js/engine/elements.js"></script>
+<script src="js/engine/vrd.js"></script>
+<script src="js/engine/combos.js"></script>
 <!-- Interface -->
 <script src="js/ui/dom.js"></script>
 <script src="js/ui/plot.js"></script>
@@ -429,6 +724,11 @@
 <script src="js/ui/steel.ui.js"></script>
 <script src="js/ui/quantities.ui.js"></script>
 <script src="js/ui/loads.ui.js"></script>
+<script src="js/ui/geotech.ui.js"></script>
+<script src="js/ui/retaining.ui.js"></script>
+<script src="js/ui/elements.ui.js"></script>
+<script src="js/ui/vrd.ui.js"></script>
+<script src="js/ui/combos.ui.js"></script>
 <script src="js/ui/app.js"></script>
 </body>
 </html>

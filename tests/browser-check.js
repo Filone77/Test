@@ -53,6 +53,12 @@ const path = require('path');
   await snap('metre', 'apercu-metre.png', async () => { await page.click('#mq_compute'); await page.click('#mf_compute'); });
   // Charges climatiques
   await snap('charges', 'apercu-charges.png', async () => { await page.click('#cn_calc'); });
+  // Nouveaux modules
+  await snap('soutenement', 'apercu-soutenement.png', async () => { await page.click('#rt_calc'); });
+  await snap('geotech', 'apercu-geotech.png', async () => { await page.click('#tb_calc'); });
+  await snap('vrd', 'apercu-vrd.png', async () => { await page.click('#vp_calc'); });
+  await snap('elements', 'apercu-elements.png', async () => { await page.click('#el_calc'); });
+  await snap('combinaisons', 'apercu-combinaisons.png', async () => { await page.click('#cb_calc'); });
 
   // Contrôles de contenu
   const checks = {};
@@ -88,6 +94,17 @@ const path = require('path');
   await page.waitForTimeout(150);
   checks.neige = await page.textContent('#cn_res');
   checks.vent = await page.textContent('#cv_res');
+  // Nouveaux modules
+  await page.click('.nav-item[data-view="soutenement"]'); await page.click('#rt_calc'); await page.waitForTimeout(120);
+  checks.soutenement = await page.textContent('#rt_res');
+  await page.click('.nav-item[data-view="geotech"]'); await page.click('#tb_calc'); await page.waitForTimeout(120);
+  checks.geotech = await page.textContent('#tb_res');
+  await page.click('.nav-item[data-view="elements"]'); await page.click('#el_calc'); await page.waitForTimeout(120);
+  checks.elements = await page.textContent('#el_res');
+  await page.click('.nav-item[data-view="vrd"]'); await page.click('#vp_calc'); await page.waitForTimeout(120);
+  checks.vrd = await page.textContent('#vp_res');
+  await page.click('.nav-item[data-view="combinaisons"]'); await page.click('#cb_calc'); await page.waitForTimeout(120);
+  checks.combos = await page.textContent('#cb_res');
   // Note de calcul (générateur PDF) — test de la fonction de construction
   checks.report = await page.evaluate(() =>
     GC.report.build('Test', [['a', 'b']], '<p>résultat</p>').indexOf('Note de calcul') >= 0);
@@ -111,6 +128,11 @@ const path = require('path');
   ok &= has('Vent', checks.vent, 'qp');
   console.log(`  ${checks.report ? '✓' : '✗'} Export note de calcul (PDF)`);
   ok &= checks.report;
+  ok &= has('Soutènement', checks.soutenement, 'enversement');
+  ok &= has('Géotech/Blindage', checks.geotech, 'Buton');
+  ok &= has('Éléments BA', checks.elements, 'deux sens');
+  ok &= has('VRD', checks.vrd, 'Débit');
+  ok &= has('Combinaisons', checks.combos, 'ELU');
 
   console.log('\n--- Erreurs JS détectées ---');
   if (errors.length === 0) console.log('  ✓ Aucune erreur console / page');
