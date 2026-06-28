@@ -23,6 +23,8 @@ const sludge = require('../js/engine/sludge.js');
 const distribution = require('../js/engine/distribution.js');
 const channel = require('../js/engine/channel.js');
 const rainwater = require('../js/engine/rainwater.js');
+const earthwork = require('../js/engine/earthwork.js');
+const detention = require('../js/engine/detention.js');
 
 let passed = 0, failed = 0;
 function check(label, got, expected, tol) {
@@ -268,6 +270,34 @@ check('Volume collectable [m³/an]', rw.Vcol, 56.7, 0.02);
 check('Volume utile cuve [m³]', rw.Vutile, 3.26, 0.03);
 check('Taux de couverture [%]', rw.tauxCouverture, 77.7, 0.03);
 checkBool('cuve normalisée = 4 m³', rw.cuveNormalisee === 4, true);
+
+console.log('Simulation journalière (cuve très grande → bilan annuel)');
+const sim = rainwater.simulation({ surface: 100, Crunoff: 0.9, etaFiltre: 0.9, pluvio: 700, demandeJour: 200, Vcuve: 500 });
+check('Pluviométrie simulée [mm]', sim.pluvioSimulee, 700, 0.02);
+check('Taux couverture (V grand) [%]', sim.tauxCouverture, 77.7, 0.05);
+const sim0 = rainwater.simulation({ surface: 100, Crunoff: 0.9, etaFiltre: 0.9, pluvio: 700, demandeJour: 200, Vcuve: 1 });
+checkBool('couverture croît avec le volume', sim.tauxCouverture > sim0.tauxCouverture, true);
+
+console.log('\n=== TERRASSEMENT EN 1610 ===');
+const ew = earthwork.tranchee({ DN: 300, DE: 345, H: 1.5, L: 50, eLit: 0.10, couverture: 0.15, reutiliser: true });
+check('Largeur EN 1610 [m]', ew.largeur, 0.845, 0.02);
+check('Volume déblai [m³]', ew.Vdeblai, 63.4, 0.02);
+check('Volume apport granulaire [m³]', ew.Vapport, 20.5, 0.03);
+check('Section tuyau déduite [m³]', ew.Vtuyau, 4.67, 0.03);
+
+console.log('\n=== BASSIN DE RÉTENTION (méthode des pluies) ===');
+const ba = detention.bassin({ A: 2, C: 0.8, Qf: 50, a: 6.1, b: 0.69 });
+check('Volume de stockage [m³]', ba.volume, 190, 0.1);
+checkBool('durée critique 15–45 min', ba.dureeCritique >= 15 && ba.dureeCritique <= 45, true);
+const ba2 = detention.bassin({ A: 2, C: 0.8, Qf: 100, a: 6.1, b: 0.69 });
+checkBool('débit de fuite ↑ → volume ↓', ba2.volume < ba.volume, true);
+
+console.log('\n=== COURBE DE REMOUS (caniveau) ===');
+check('Profondeur critique (rect b=1, Q=1) [m]', channel.profondeurCritique({ forme: 'rectangulaire', b: 1, Q: 1 }), 0.467, 0.02);
+check('Profondeur normale (b=1, Q=1, I=0.001, K=50) [m]', channel.profondeurNormale({ forme: 'rectangulaire', b: 1, Q: 1, I: 0.001, K: 50 }), 1.25, 0.05);
+const rem = channel.courbeRemous({ forme: 'rectangulaire', b: 1, Q: 1, I: 0.001, K: 50, yAval: 1.6, L: 2000 });
+checkBool('profil M1 (yAval > yn > yc)', rem.type === 'M1', true);
+checkBool('profil de remous calculé', rem.profil.length > 5, true);
 
 console.log(`\n===========================================`);
 console.log(`Résultat : ${passed} réussis, ${failed} échoués`);

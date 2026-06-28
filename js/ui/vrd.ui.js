@@ -39,19 +39,84 @@
   }
 
   function terr() {
-    const r = GC.vrd.terrassement({
-      L: D.num('vt_L'), largeur: D.num('vt_largeur'), profondeur: D.num('vt_profondeur'),
-      DN: D.num('vt_DN'), litSable: D.num('vt_lit'), foisonnement: D.num('vt_foison')
+    const r = GC.earthwork.tranchee({
+      DN: D.num('vt_DN'), DE: D.num('vt_DE'), H: D.num('vt_profondeur'), L: D.num('vt_L'),
+      eLit: D.num('vt_lit'), couverture: D.num('vt_couv'),
+      largeur: D.val('vt_largeur') ? D.num('vt_largeur') : undefined,
+      foisonnement: D.num('vt_foison'), reutiliser: D.val('vt_reuse') === '1'
     });
-    let html = `<div class="result-head"><span class="badge badge-ok">Terrassement</span><h4>Tranchée de réseau</h4></div>`;
+    let html = `<div class="result-head"><span class="badge badge-ok">EN 1610</span><h4>Tranchée de réseau</h4></div>`;
+    html += `<p class="muted">Largeur mini EN 1610 : tableau 1 = ${D.fmt(r.largeurEN1610.w1, 2)} m, tableau 2 = ${D.fmt(r.largeurEN1610.w2, 2)} m → <b>${D.fmt(r.largeur, 2)} m</b> · couverture totale ${D.fmt(r.couvertureTotale, 2)} m</p>`;
     html += D.table(['Poste', 'Volume', 'Unité'], [
-      ['Déblai', D.fmt(r.deblai, 1), 'm³'],
-      ['Lit de pose (sable)', D.fmt(r.litSable, 1), 'm³'],
-      ['Enrobage', D.fmt(r.enrobage, 1), 'm³'],
-      ['Remblai (réutilisé)', D.fmt(r.remblai, 1), 'm³'],
-      ['Évacuation (foisonné)', D.fmt(r.evacuationFoisonnee, 1), 'm³']
+      ['Déblai total', D.fmt(r.Vdeblai, 1), 'm³'],
+      ['Lit de pose (apport)', D.fmt(r.Vlit, 1), 'm³'],
+      ['Enrobage net (apport, tuyau déduit)', D.fmt(r.Venrobage, 1), 'm³'],
+      ['Section de tuyau déduite', D.fmt(r.Vtuyau, 2), 'm³'],
+      ['Remblai principal', D.fmt(r.Vremblai, 1), 'm³'],
+      ['<b>Matériaux d’apport (grave/sable)</b>', '<b>' + D.fmt(r.Vapport, 1) + '</b>', 'm³'],
+      ['<b>Évacuation (foisonnée)</b>', '<b>' + D.fmt(r.Vevacuation, 1) + '</b>', 'm³']
     ]);
+    if (r.messages.length) html += '<ul class="notes">' + r.messages.map((m) => `<li>${m}</li>`).join('') + '</ul>';
     D.$('#vt_res').innerHTML = html;
+  }
+
+  function bassin() {
+    const r = GC.detention.bassin({ A: D.num('ba_A'), C: D.num('ba_C'), Qf: D.num('ba_Qf'), a: D.num('ba_a'), b: D.num('ba_b') });
+    let html = `<div class="result-head"><span class="badge badge-ok">Méthode des pluies</span><h4>Bassin de rétention</h4></div>`;
+    html += '<div class="kpis">' +
+      `<div class="kpi"><div class="kpi-label">Volume de stockage</div><div class="kpi-val">${D.fmt(r.volume, 0)} <small>m³</small></div></div>` +
+      `<div class="kpi"><div class="kpi-label">Durée critique</div><div class="kpi-val">${D.fmt(r.dureeCritique, 0)} <small>min</small></div></div>` +
+      `<div class="kpi"><div class="kpi-label">Débit fuite spéc.</div><div class="kpi-val">${D.fmt(r.debitFuiteSpecifique, 1)} <small>L/s/ha</small></div></div>` +
+      '</div>';
+    html += D.table(['Grandeur', 'Valeur', 'Unité'], [
+      ['Surface active (C·A)', D.fmt(r.C * r.A, 2), 'ha'],
+      ['Débit de fuite', D.fmt(r.Qf, 0), 'L/s'],
+      ['Montana a / b', D.fmt(r.a, 2) + ' / ' + D.fmt(r.b, 2), '—'],
+      ['Hauteur de pluie critique', D.fmt(r.hauteurCritique, 1), 'mm'],
+      ['Volume entrant à tcrit', D.fmt(r.Ventrant, 1), 'm³'],
+      ['<b>Volume de rétention</b>', '<b>' + D.fmt(r.volume, 1) + '</b>', 'm³']
+    ]);
+    html += '<div id="ba_plot" class="plotbox"></div>';
+    if (r.messages.length) html += '<ul class="notes">' + r.messages.map((m) => `<li>${m}</li>`).join('') + '</ul>';
+    D.$('#ba_res').innerHTML = html;
+    GC.plot.diagram(D.$('#ba_plot'), r.courbe, { yKey: 'y', color: '#1b3a5b', fill: 'rgba(27,58,91,0.10)', title: 'Volume stocké selon la durée de pluie', unit: 'm³' });
+  }
+
+  function recupSim() {
+    const C = parseFloat(D.val('ep_toiture'));
+    const base = { surface: D.num('ep_surface'), Crunoff: C, pluvio: D.num('ep_pluvio'), demandeJour: D.num('ep_demande'), nJoursPluie: D.num('ep_npluie') };
+    const r = GC.rainwater.simulation(Object.assign({ Vcuve: D.num('ep_vcuve') }, base));
+    let html = `<div class="result-head"><span class="badge badge-ok">Simulation 365 j</span><h4>Couverture réelle (cuve ${D.fmt(r.Vcuve, 1)} m³)</h4></div>`;
+    html += D.table(['Grandeur', 'Valeur', 'Unité'], [
+      ['Pluviométrie simulée', D.fmt(r.pluvioSimulee, 0), 'mm/an'],
+      ['<b>Taux de couverture réel</b>', '<b>' + D.fmt(r.tauxCouverture, 1) + '</b>', '%'],
+      ['Volume récupéré', D.fmt(r.volumeRecupere, 1), 'm³/an'],
+      ['Complément réseau', D.fmt(r.complementReseau, 1), 'm³/an'],
+      ['Débordement (trop-plein)', D.fmt(r.debordement, 1), 'm³/an'],
+      ['Jours cuve vide', D.fmt(r.joursVides, 0), 'j/an']
+    ]);
+    html += '<div id="ep_simplot" class="plotbox"></div>';
+    D.$('#ep_simres').innerHTML = html;
+    GC.plot.diagram(D.$('#ep_simplot'), GC.rainwater.courbeCouverture(base, Math.max(10, D.num('ep_vcuve') * 2)),
+      { yKey: 'y', color: '#e08a1e', fill: 'rgba(224,138,30,0.12)', title: 'Taux de couverture selon le volume de cuve', unit: '%' });
+  }
+
+  function remous() {
+    const r = GC.channel.courbeRemous({
+      forme: D.val('ca_forme'), b: D.num('ca_b'), m: D.num('ca_m'),
+      Q: D.num('ca_Qrem'), I: D.num('ca_I'), K: D.num('ca_K'), yAval: D.num('ca_yaval'), L: 2000
+    });
+    let html = `<div class="result-head"><span class="badge badge-ok">Remous (GVF)</span><h4>Courbe de remous — profil ${r.type}</h4></div>`;
+    html += D.table(['Grandeur', 'Valeur', 'Unité'], [
+      ['Profondeur normale yn', D.fmt(r.yn, 3), 'm'],
+      ['Profondeur critique yc', D.fmt(r.yc, 3), 'm'],
+      ['Type de pente', r.pente, '—'],
+      ['Profil', r.type + ' (' + r.sens + ')', '—'],
+      ['Longueur d’influence', D.fmt(r.longueur, 0), 'm']
+    ]);
+    html += '<div id="ca_remplot" class="plotbox"></div>';
+    D.$('#ca_remres').innerHTML = html;
+    GC.plot.diagram(D.$('#ca_remplot'), r.profil, { yKey: 'y', color: '#2a5688', fill: 'rgba(42,86,136,0.12)', title: 'Profil de la surface libre y(x)', unit: 'm' });
   }
 
   function caniveau() {
@@ -122,7 +187,20 @@
     D.$('#vch_calc').addEventListener('click', chaussee);
     D.$('#ca_calc').addEventListener('click', caniveau);
     D.$('#ep_calc').addEventListener('click', recupEP);
+    // Montana (bassin de rétention)
+    const ms = D.$('#ba_montana');
+    if (ms) {
+      Object.keys(GC.detention.MONTANA).forEach((k) => ms.appendChild(D.el('option', { value: k }, [k])));
+      ms.addEventListener('change', () => {
+        const m = GC.detention.MONTANA[ms.value];
+        if (m) { D.$('#ba_a').value = m.a; D.$('#ba_b').value = m.b; bassin(); }
+      });
+    }
+    D.$('#ba_calc').addEventListener('click', bassin);
+    D.$('#ep_sim').addEventListener('click', recupSim);
+    D.$('#ca_remous').addEventListener('click', remous);
     pluvial(); canal(); terr(); chaussee(); caniveau(); recupEP();
+    bassin(); recupSim(); remous();
   }
 
   GC.modules = GC.modules || {};

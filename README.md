@@ -20,7 +20,7 @@ analytiques connues.
 | **Éléments BA** | EN 1992-1-1 | **Dalle portant deux sens** (coefficients μx/μy), **semelle filante**, **voile porteur** (§12.6.5.2) |
 | **Soutènement / ouvrages enterrés** | EC2 / EC7 | **Mur en T** : stabilité externe (renversement, glissement, poinçonnement du sol) et **ferraillage** du voile et du talon |
 | **Géotechnique & Blindage** | Rankine / Terzaghi-Peck | **Poussée des terres** (nappe, cohésion, surcharge) et **tranchée blindée** : HEB + bois (soldats, planches, butons) ou **caisson** |
-| **VRD** | Rationnelle / Manning-Strickler | **Assainissement pluvial** (Q=C·i·A), **canalisations** gravitaires (Ø requis, autocurage), **caniveau** (canal à surface libre), **récupération des eaux pluviales** (bâche), **terrassement** de tranchée, **corps de chaussée** (CBR indicatif) |
+| **VRD** | Rationnelle / Manning / EN 1610 | **Assainissement pluvial** (Q=C·i·A), **canalisations** gravitaires, **caniveau** (Manning) + **courbe de remous** (régime varié), **récupération des eaux pluviales** (bâche + **simulation journalière** YAS), **bassin de rétention** (méthode des pluies / Montana), **terrassement EN 1610** (zones, largeur mini, déduction tuyau), **corps de chaussée** (CBR indicatif) |
 | **Combinaisons d'actions** | EN 1990 | Génération automatique des combinaisons **ELU fondamentales** et **ELS** (caractéristique, fréquente, quasi-permanente) avec coefficients ψ |
 | **Conduite sous pression** | Darcy-Weisbach | Vitesse, **pertes de charge** (Colebrook-White), diamètre économique, **coup de bélier** (célérité, Joukowsky), tenue de la paroi (contrainte / PN) |
 | **Station de pompage** | Hydraulique | **HMT**, puissances (hydraulique / arbre / électrique), **volume utile de bâche** (anti court-cycle), **cavitation** (NPSH), **point de fonctionnement** (intersection courbe pompe × courbe réseau) |
@@ -49,7 +49,7 @@ L'application n'a **aucune dépendance** pour fonctionner. Deux possibilités :
 Le moteur de calcul est testable hors navigateur, sous Node.js :
 
 ```bash
-npm test            # 96 vérifications contre des résultats analytiques
+npm test            # 110 vérifications contre des résultats analytiques
 npm run test:browser  # rendu réel dans Chromium (Playwright) + captures
 ```
 
@@ -75,8 +75,10 @@ Exemples de cas vérifiés :
 - Vérificateur : note avec As=900 mm² (requis 1150) → **avis NON CONFORME**
 - Déversoir rectangulaire b=2 m, H=0,3 m → **Q=0,60 m³/s** ; V-notch 90°, H=0,2 → 24,5 L/s
 - Boue à 4 % → **ρ=1013 kg/m³** ; épaississement 1 %→4 % : volume ÷4
-- Caniveau 0,3×0,2 m, I=1 % → **Q=81,6 L/s**, V=1,36 m/s
+- Caniveau 0,3×0,2 m, I=1 % → **Q=81,6 L/s**, V=1,36 m/s ; remous profil M1
 - Récup. EP : toiture 100 m², 700 mm/an → **cuve 4 m³**, couverture 78 %
+- Tranchée EN 1610 DN300 → **largeur 0,845 m**, déblai 63 m³, tuyau déduit
+- Bassin de rétention 2 ha, Qf=50 L/s → **190 m³** (durée critique ≈ 28 min)
 
 ## Architecture
 
@@ -102,8 +104,10 @@ js/engine/              MOTEUR DE CALCUL (pur, testable sous Node)
   weirs.js              déversoirs (surface libre)
   sludge.js             réseaux de boues (siccité, matière sèche)
   distribution.js       répartiteur passif de débit
-  channel.js            caniveau (canal à surface libre, Manning)
-  rainwater.js          récupération des eaux pluviales (bâche)
+  channel.js            caniveau + courbe de remous (régime varié)
+  rainwater.js          récupération EP (bâche + simulation journalière)
+  earthwork.js          terrassement de tranchée (EN 1610)
+  detention.js          bassin de rétention (méthode des pluies)
   validator.js          vérificateur de note de calcul
 js/ui/                  INTERFACE (navigateur)
   dom.js, plot.js       utilitaires + graphiques SVG

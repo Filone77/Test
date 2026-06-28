@@ -137,8 +137,14 @@ const path = require('path');
   await page.click('.nav-item[data-view="vrd"]');
   await page.click('[data-subtab="vrd"][data-tab="caniveau"]'); await page.waitForTimeout(120); await page.click('#ca_calc'); await page.waitForTimeout(200);
   await page.screenshot({ path: path.join(outDir, 'apercu-caniveau.png'), fullPage: true });
-  await page.click('[data-subtab="vrd"][data-tab="recupEP"]'); await page.waitForTimeout(120); await page.click('#ep_calc'); await page.waitForTimeout(200);
+  await page.click('[data-subtab="vrd"][data-tab="recupEP"]'); await page.waitForTimeout(120); await page.click('#ep_calc'); await page.click('#ep_sim'); await page.waitForTimeout(250);
   await page.screenshot({ path: path.join(outDir, 'apercu-recup-ep.png'), fullPage: true });
+  await page.click('[data-subtab="vrd"][data-tab="terr"]'); await page.waitForTimeout(120); await page.click('#vt_calc'); await page.waitForTimeout(150);
+  await page.screenshot({ path: path.join(outDir, 'apercu-terrassement.png'), fullPage: true });
+  await page.click('[data-subtab="vrd"][data-tab="bassin"]'); await page.waitForTimeout(120); await page.click('#ba_calc'); await page.waitForTimeout(200);
+  await page.screenshot({ path: path.join(outDir, 'apercu-bassin.png'), fullPage: true });
+  await page.click('[data-subtab="vrd"][data-tab="caniveau"]'); await page.waitForTimeout(120); await page.click('#ca_remous'); await page.waitForTimeout(200);
+  await page.screenshot({ path: path.join(outDir, 'apercu-remous.png'), fullPage: true });
   await page.click('.nav-item[data-view="pompage"]'); await page.click('[data-subtab="pompage"][data-tab="pf"]'); await page.waitForTimeout(120); await page.click('#pf_calc'); await page.waitForTimeout(150);
   checks.pf = await page.textContent('#pf_res');
   const pfSvg = await page.$$eval('#pf_res svg', (els) => els.length);
@@ -148,6 +154,16 @@ const path = require('path');
   checks.caniveau = await page.textContent('#ca_res');
   await page.click('[data-subtab="vrd"][data-tab="recupEP"]'); await page.waitForTimeout(100); await page.click('#ep_calc'); await page.waitForTimeout(120);
   checks.recupEP = await page.textContent('#ep_res');
+  // v6 : terrassement EN 1610, bassin, simulation EP, courbe de remous
+  await page.click('[data-subtab="vrd"][data-tab="terr"]'); await page.waitForTimeout(100); await page.click('#vt_calc'); await page.waitForTimeout(120);
+  checks.terrEN = await page.textContent('#vt_res');
+  await page.click('[data-subtab="vrd"][data-tab="bassin"]'); await page.waitForTimeout(100); await page.click('#ba_calc'); await page.waitForTimeout(150);
+  checks.bassin = await page.textContent('#ba_res');
+  await page.click('[data-subtab="vrd"][data-tab="recupEP"]'); await page.waitForTimeout(100); await page.click('#ep_sim'); await page.waitForTimeout(180);
+  checks.epsim = await page.textContent('#ep_simres');
+  const epSimSvg = await page.$$eval('#ep_simres svg', (els) => els.length);
+  await page.click('[data-subtab="vrd"][data-tab="caniveau"]'); await page.waitForTimeout(100); await page.click('#ca_remous'); await page.waitForTimeout(150);
+  checks.remous = await page.textContent('#ca_remres');
   // Note de calcul (générateur PDF) — test de la fonction de construction
   checks.report = await page.evaluate(() =>
     GC.report.build('Test', [['a', 'b']], '<p>résultat</p>').indexOf('Note de calcul') >= 0);
@@ -188,6 +204,12 @@ const path = require('path');
   ok &= pfSvg >= 1;
   ok &= has('Caniveau', checks.caniveau, 'Manning');
   ok &= has('Récup. EP', checks.recupEP, 'cuve');
+  ok &= has('Terrassement EN 1610', checks.terrEN, 'EN 1610');
+  ok &= has('Bassin rétention', checks.bassin, 'rétention');
+  ok &= has('Simulation EP', checks.epsim, 'couverture');
+  console.log(`  ${epSimSvg >= 1 ? '✓' : '✗'} Simulation EP : ${epSimSvg} courbe SVG`);
+  ok &= epSimSvg >= 1;
+  ok &= has('Courbe de remous', checks.remous, 'remous');
 
   console.log('\n--- Erreurs JS détectées ---');
   if (errors.length === 0) console.log('  ✓ Aucune erreur console / page');

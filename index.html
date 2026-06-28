@@ -611,6 +611,7 @@
           <button class="subtab" data-subtab="vrd" data-tab="caniveau">Caniveau</button>
           <button class="subtab" data-subtab="vrd" data-tab="recupEP">Récup. eaux pluviales</button>
           <button class="subtab" data-subtab="vrd" data-tab="terr">Terrassement</button>
+          <button class="subtab" data-subtab="vrd" data-tab="bassin">Bassin rétention</button>
           <button class="subtab" data-subtab="vrd" data-tab="chaussee">Chaussée</button>
         </div>
 
@@ -668,6 +669,19 @@
             </div>
             <div class="result" id="ca_res"></div>
           </div>
+          <div class="grid2" style="margin-top:18px">
+            <div class="card">
+              <h3>Courbe de remous (régime varié)</h3>
+              <p class="desc">Profil de surface depuis une section de contrôle (réutilise la forme ci-dessus).</p>
+              <div class="form-grid">
+                <div class="field"><label>Débit Q [m³/s]</label><input id="ca_Qrem" type="number" value="0.08" step="0.01" /></div>
+                <div class="field"><label>Tirant d'eau de contrôle [m]</label><input id="ca_yaval" type="number" value="0.35" step="0.01" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="ca_remous">Tracer le remous</button>
+                <button class="btn ghost" data-export-title="VRD — Courbe de remous" data-export-res="ca_remres">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="ca_remres"></div>
+          </div>
         </div>
 
         <div class="subpanel" data-subpanel="vrd" data-panel="recupEP">
@@ -687,25 +701,61 @@
             </div>
             <div class="result" id="ep_res"></div>
           </div>
+          <div class="grid2" style="margin-top:18px">
+            <div class="card">
+              <h3>Simulation journalière (taux de couverture réel)</h3>
+              <p class="desc">Bilan jour par jour sur une chronique de pluie reproductible.</p>
+              <div class="form-grid">
+                <div class="field"><label>Jours de pluie / an</label><input id="ep_npluie" type="number" value="110" /></div>
+                <div class="field"><label>Volume de cuve [m³]</label><input id="ep_vcuve" type="number" value="4" /></div>
+              </div>
+              <div class="btn-row"><button class="btn ambre" id="ep_sim">▶ Simuler 365 jours</button>
+                <button class="btn ghost" data-export-title="VRD — Simulation récupération EP" data-export-res="ep_simres">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="ep_simres"></div>
+          </div>
         </div>
 
         <div class="subpanel" data-subpanel="vrd" data-panel="terr">
           <div class="grid2">
             <div class="card">
-              <h3>Terrassement de tranchée</h3>
-              <p class="desc">Déblai, lit de pose, enrobage, remblai, évacuation.</p>
+              <h3>Terrassement de tranchée (EN 1610)</h3>
+              <p class="desc">Largeur mini normalisée, volumes par zone, section de tuyau déduite.</p>
               <div class="form-grid">
-                <div class="field"><label>Longueur L [m]</label><input id="vt_L" type="number" value="50" /></div>
-                <div class="field"><label>Largeur [m]</label><input id="vt_largeur" type="number" value="0.6" /></div>
-                <div class="field"><label>Profondeur [m]</label><input id="vt_profondeur" type="number" value="1.2" /></div>
                 <div class="field"><label>DN canalisation [mm]</label><input id="vt_DN" type="number" value="300" /></div>
-                <div class="field"><label>Lit de sable [m]</label><input id="vt_lit" type="number" value="0.1" /></div>
+                <div class="field"><label>Ø extérieur DE [mm]</label><input id="vt_DE" type="number" value="345" /></div>
+                <div class="field"><label>Profondeur H [m]</label><input id="vt_profondeur" type="number" value="1.5" /></div>
+                <div class="field"><label>Longueur L [m]</label><input id="vt_L" type="number" value="50" /></div>
+                <div class="field"><label>Lit de pose [m]</label><input id="vt_lit" type="number" value="0.1" /></div>
+                <div class="field"><label>Couverture enrobage [m]</label><input id="vt_couv" type="number" value="0.15" /></div>
+                <div class="field"><label>Largeur imposée [m] (option)</label><input id="vt_largeur" type="number" placeholder="auto EN 1610" /></div>
                 <div class="field"><label>Foisonnement</label><input id="vt_foison" type="number" value="1.3" step="0.05" /></div>
+                <div class="field"><label>Réutiliser les déblais</label><select id="vt_reuse"><option value="1" selected>Oui</option><option value="0">Non</option></select></div>
               </div>
               <div class="btn-row"><button class="btn" id="vt_calc">Calculer</button>
-                <button class="btn ghost" data-export-title="VRD — Terrassement" data-export-res="vt_res">📄 Note PDF</button></div>
+                <button class="btn ghost" data-export-title="VRD — Terrassement EN 1610" data-export-res="vt_res">📄 Note PDF</button></div>
             </div>
             <div class="result" id="vt_res"></div>
+          </div>
+        </div>
+
+        <div class="subpanel" data-subpanel="vrd" data-panel="bassin">
+          <div class="grid2">
+            <div class="card">
+              <h3>Bassin de rétention / d'orage</h3>
+              <p class="desc">Méthode des pluies (Montana) : volume de stockage selon le débit de fuite.</p>
+              <div class="form-grid">
+                <div class="field"><label>Surface BV [ha]</label><input id="ba_A" type="number" value="2" /></div>
+                <div class="field"><label>Coeff. ruissellement C</label><input id="ba_C" type="number" value="0.8" step="0.05" /></div>
+                <div class="field"><label>Débit de fuite [L/s]</label><input id="ba_Qf" type="number" value="50" /></div>
+                <div class="field full"><label>Pluie de projet (Montana)</label><select id="ba_montana"></select></div>
+                <div class="field"><label>Montana a [mm/min]</label><input id="ba_a" type="number" value="6.1" step="0.1" /></div>
+                <div class="field"><label>Montana b</label><input id="ba_b" type="number" value="0.69" step="0.01" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="ba_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="VRD — Bassin de rétention" data-export-res="ba_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="ba_res"></div>
           </div>
         </div>
 
@@ -1069,6 +1119,8 @@
 <script src="js/engine/distribution.js"></script>
 <script src="js/engine/channel.js"></script>
 <script src="js/engine/rainwater.js"></script>
+<script src="js/engine/earthwork.js"></script>
+<script src="js/engine/detention.js"></script>
 <script src="js/engine/validator.js"></script>
 <!-- Interface -->
 <script src="js/ui/dom.js"></script>
