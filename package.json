@@ -1,12 +1,12 @@
 {
   "name": "genicivil",
   "version": "1.0.0",
-  "description": "Logiciel de calcul de génie civil (béton armé EC2, RDM, charpente acier EC3, métré & fondations) — fonctionne dans le navigateur.",
+  "description": "Logiciel de calcul de génie civil (21 modules : béton armé, RDM, acier, soutènement, géotechnique, VRD/hydraulique, réseau gravitaire, voirie, charges, combinaisons, vérificateur de notes) — fonctionne dans le navigateur, sans dépendance.",
   "scripts": {
     "test": "node tests/run-tests.js",
     "test:browser": "NODE_PATH=$(npm root -g) node tests/browser-check.js",
     "start": "python3 -m http.server 8080"
   },
-  "keywords": ["génie-civil", "eurocode", "béton-armé", "RDM", "charpente", "structure"],
+  "keywords": ["génie-civil", "eurocode", "béton-armé", "RDM", "charpente", "structure", "VRD", "hydraulique", "assainissement", "voirie", "géotechnique"],
   "license": "MIT"
 }

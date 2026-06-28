@@ -1166,16 +1166,31 @@
              dans le navigateur (aucune installation, aucune donnée envoyée à un serveur).
              Le moteur de calcul est validé par une suite de tests automatisés comparés à des
              solutions analytiques.</p>
-          <h3>Modules</h3>
+          <h3>Modules (21 domaines de calcul)</h3>
+          <p><b>Structure</b></p>
           <ul>
-            <li><b>Béton armé (EN 1992-1-1)</b> — flexion simple, effort tranchant, poteaux en flexion composée (diagramme d'interaction N-M), dalles.</li>
-            <li><b>Analyse de structures</b> — poutres continues par éléments finis : réactions, V(x), M(x), déformée.</li>
-            <li><b>Charpente acier (EN 1993-1-1)</b> — profilés IPE/HEA/HEB, traction, flambement par flexion, flexion, cisaillement.</li>
-            <li><b>Métré &amp; fondations</b> — avant-métré quantitatif et semelles isolées par la méthode des bielles.</li>
+            <li><b>Béton armé (EN 1992-1-1)</b> — flexion simple, poutre en Té, effort tranchant, poteau (interaction N-M), dalle.</li>
+            <li><b>Éléments BA</b> — dalle portant deux sens, semelle filante, voile porteur.</li>
+            <li><b>Analyse de structures (RDM)</b> — poutres continues par éléments finis (V, M, flèche, vérif. ELS).</li>
+            <li><b>Charpente acier (EN 1993-1-1)</b> — profilés IPE/HEA/HEB, traction, flambement, flexion, cisaillement.</li>
+            <li><b>Soutènement</b> — mur en T (stabilité + ferraillage). <b>Géotechnique &amp; blindage</b> — poussée des terres, tranchée blindée.</li>
+          </ul>
+          <p><b>VRD &amp; hydraulique</b></p>
+          <ul>
+            <li><b>VRD</b> — assainissement pluvial, canalisations, caniveau (remous, ressaut, ressaut localisé), récupération EP (simulation, import CSV), bassin de rétention, terrassement EN 1610, chaussée.</li>
+            <li><b>Réseau gravitaire</b> — profil en long (cotes, chutes, optimisation du fil d'eau, mise en charge). <b>Voirie</b> — NF P98-086.</li>
+            <li><b>Conduite sous pression</b> (Darcy, coup de bélier) · <b>Station de pompage</b> (HMT, NPSH, point de fonctionnement).</li>
+            <li><b>Déversoirs</b> · <b>Réseaux de boues</b> · <b>Répartiteur de débit</b>.</li>
+          </ul>
+          <p><b>Transverse</b></p>
+          <ul>
+            <li><b>Charges climatiques</b> (neige/vent, EN 1991) · <b>Combinaisons d'actions</b> (EN 1990) · <b>Métré &amp; fondations</b>.</li>
+            <li><b>Vérificateur de note de calcul</b> — contrôle indépendant (BA, semelle, soutènement, RDM, acier, VRD, pompage).</li>
           </ul>
           <h3>Hypothèses</h3>
           <p>Facteurs partiels : γ<sub>C</sub>=1,5 ; γ<sub>S</sub>=1,15 ; γ<sub>M0</sub>=γ<sub>M1</sub>=1,0.
-             Coefficients α<sub>cc</sub>=1,0. Calculs à l'ELU sauf mention contraire.</p>
+             Coefficients α<sub>cc</sub>=1,0. Calculs à l'ELU sauf mention contraire.
+             Moteur de calcul validé par <b>134 tests automatisés</b> comparés à des solutions analytiques.</p>
           <div class="disclaimer">
             ⚠ <b>Avertissement :</b> outil d'aide à l'avant-projet à but pédagogique.
             Les résultats doivent être vérifiés par un ingénieur qualifié et ne remplacent pas
