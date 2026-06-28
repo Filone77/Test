@@ -76,5 +76,33 @@
     };
   }
 
-  return { station, PATM, PVAP };
+  /**
+   * Point de fonctionnement : intersection courbe pompe × courbe réseau.
+   * Réseau : H = Hgeo + r·Q²  (r calé sur le point de dimensionnement)
+   * Pompe  : H = H0 − b·Q²    (calée sur la hauteur à débit nul H0 et un point)
+   * @param {object} p {Hgeo, Qd (m³/h), Jd (pertes au point Qd), H0, Qn, Hn}
+   */
+  function pointFonctionnement(p) {
+    const r = p.Jd / (p.Qd * p.Qd);                 // résistance réseau
+    const b = (p.H0 - p.Hn) / (p.Qn * p.Qn);        // pente pompe
+    const Qop = Math.sqrt(Math.max((p.H0 - p.Hgeo) / (b + r), 0)); // m³/h
+    const Hop = p.Hgeo + r * Qop * Qop;
+
+    // points pour le tracé des deux courbes
+    const Qmax = Math.max(p.Qn, Qop) * 1.4;
+    const pompe = [], reseau = [];
+    for (let i = 0; i <= 20; i++) {
+      const q = Qmax * i / 20;
+      pompe.push({ x: round(q, 1), y: round(p.H0 - b * q * q, 2) });
+      reseau.push({ x: round(q, 1), y: round(p.Hgeo + r * q * q, 2) });
+    }
+    return {
+      r: round(r, 6), b: round(b, 6),
+      Qop: round(Qop, 1), Hop: round(Hop, 2),
+      courbes: { pompe, reseau },
+      point: { x: round(Qop, 1), y: round(Hop, 2) }
+    };
+  }
+
+  return { station, pointFonctionnement, PATM, PVAP };
 });

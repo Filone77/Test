@@ -28,6 +28,9 @@
       <div class="nav-item" data-view="vrd"><span class="ico">⌳</span> VRD</div>
       <div class="nav-item" data-view="conduite"><span class="ico">⊚</span> Conduite sous pression</div>
       <div class="nav-item" data-view="pompage"><span class="ico">⏿</span> Station de pompage</div>
+      <div class="nav-item" data-view="deversoirs"><span class="ico">⫰</span> Déversoirs</div>
+      <div class="nav-item" data-view="boues"><span class="ico">⬗</span> Réseaux boues</div>
+      <div class="nav-item" data-view="repartiteur"><span class="ico">⋔</span> Répartiteur débit</div>
       <div class="nav-item" data-view="charges"><span class="ico">❄</span> Charges (neige/vent)</div>
       <div class="nav-item" data-view="combinaisons"><span class="ico">Σ</span> Combinaisons</div>
       <div class="nav-item" data-view="validation"><span class="ico">✔</span> Vérif. note de calcul</div>
@@ -117,6 +120,21 @@
             <div class="mc-ico">✔</div><h3>Vérif. note de calcul</h3>
             <p>Contrôle indépendant : verdict conforme / non conforme + corrections.</p>
             <span class="mc-tag">Bureau de contrôle</span>
+          </div>
+          <div class="module-card" data-goto="deversoirs">
+            <div class="mc-ico">⫰</div><h3>Déversoirs</h3>
+            <p>Seuils rectangulaire, triangulaire, épais et déversoir d'orage.</p>
+            <span class="mc-tag">Surface libre</span>
+          </div>
+          <div class="module-card" data-goto="boues">
+            <div class="mc-ico">⬗</div><h3>Réseaux boues</h3>
+            <p>Siccité, matière sèche, épaississement, pertes de charge corrigées.</p>
+            <span class="mc-tag">Assainissement</span>
+          </div>
+          <div class="module-card" data-goto="repartiteur">
+            <div class="mc-ico">⋔</div><h3>Répartiteur de débit</h3>
+            <p>Distribution passive d'un débit sur plusieurs tuyaux.</p>
+            <span class="mc-tag">Hydraulique</span>
           </div>
         </div>
       </section>
@@ -590,6 +608,8 @@
         <div class="subtabs">
           <button class="subtab active" data-subtab="vrd" data-tab="pluvial">Assainissement pluvial</button>
           <button class="subtab" data-subtab="vrd" data-tab="canal">Canalisation</button>
+          <button class="subtab" data-subtab="vrd" data-tab="caniveau">Caniveau</button>
+          <button class="subtab" data-subtab="vrd" data-tab="recupEP">Récup. eaux pluviales</button>
           <button class="subtab" data-subtab="vrd" data-tab="terr">Terrassement</button>
           <button class="subtab" data-subtab="vrd" data-tab="chaussee">Chaussée</button>
         </div>
@@ -626,6 +646,46 @@
                 <button class="btn ghost" data-export-title="VRD — Canalisation" data-export-res="vc_res">📄 Note PDF</button></div>
             </div>
             <div class="result" id="vc_res"></div>
+          </div>
+        </div>
+
+        <div class="subpanel" data-subpanel="vrd" data-panel="caniveau">
+          <div class="grid2">
+            <div class="card">
+              <h3>Caniveau (canal à surface libre)</h3>
+              <p class="desc">Dimensionnement par Manning-Strickler : tirant d'eau normal pour le débit à évacuer.</p>
+              <div class="form-grid">
+                <div class="field"><label>Débit à évacuer [L/s]</label><input id="ca_Qls" type="number" value="80" /></div>
+                <div class="field"><label>Forme</label><select id="ca_forme"><option value="rectangulaire" selected>Rectangulaire</option><option value="trapeze">Trapézoïdale</option></select></div>
+                <div class="field"><label>Largeur fond b [m]</label><input id="ca_b" type="number" value="0.3" /></div>
+                <div class="field"><label>Fruit talus m (H/V)</label><input id="ca_m" type="number" value="0" /></div>
+                <div class="field"><label>Pente I [m/m]</label><input id="ca_I" type="number" value="0.01" step="0.001" /></div>
+                <div class="field"><label>Strickler K</label><input id="ca_K" type="number" value="70" /></div>
+                <div class="field"><label>Revanche [m]</label><input id="ca_revanche" type="number" value="0.05" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="ca_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="VRD — Caniveau" data-export-res="ca_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="ca_res"></div>
+          </div>
+        </div>
+
+        <div class="subpanel" data-subpanel="vrd" data-panel="recupEP">
+          <div class="grid2">
+            <div class="card">
+              <h3>Bâche de récupération des eaux pluviales</h3>
+              <p class="desc">Volume collectable, demande et volume utile de la cuve.</p>
+              <div class="form-grid">
+                <div class="field"><label>Surface de toiture [m²]</label><input id="ep_surface" type="number" value="100" /></div>
+                <div class="field"><label>Type de toiture</label><select id="ep_toiture"></select></div>
+                <div class="field"><label>Pluviométrie [mm/an]</label><input id="ep_pluvio" type="number" value="700" /></div>
+                <div class="field"><label>Demande [L/jour]</label><input id="ep_demande" type="number" value="200" /></div>
+                <div class="field"><label>Période de stockage [j]</label><input id="ep_jours" type="number" value="21" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="ep_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="VRD — Récupération eaux pluviales" data-export-res="ep_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="ep_res"></div>
           </div>
         </div>
 
@@ -714,7 +774,12 @@
       <!-- ---------- STATION DE POMPAGE ---------- -->
       <section class="view" id="view-pompage">
         <h2 class="section-title">Station de pompage</h2>
-        <p class="section-sub">HMT, puissances, volume utile de la bâche (limitation des démarrages) et vérification de la cavitation (NPSH).</p>
+        <p class="section-sub">HMT, puissances, volume utile de la bâche (limitation des démarrages), cavitation (NPSH) et point de fonctionnement (pompe × réseau).</p>
+        <div class="subtabs">
+          <button class="subtab active" data-subtab="pompage" data-tab="dim">Dimensionnement</button>
+          <button class="subtab" data-subtab="pompage" data-tab="pf">Point de fonctionnement</button>
+        </div>
+        <div class="subpanel active" data-subpanel="pompage" data-panel="dim">
         <div class="grid2">
           <div class="card">
             <h3>Données de la station</h3>
@@ -737,6 +802,27 @@
           </div>
           <div class="result" id="pu_res"></div>
         </div>
+        </div>
+
+        <div class="subpanel" data-subpanel="pompage" data-panel="pf">
+          <div class="grid2">
+            <div class="card">
+              <h3>Point de fonctionnement (pompe × réseau)</h3>
+              <p class="desc">Courbe pompe H₀ − b·Q² et courbe réseau Hgéo + r·Q².</p>
+              <div class="form-grid">
+                <div class="field"><label>Hauteur géométrique [m]</label><input id="pf_Hgeo" type="number" value="10" /></div>
+                <div class="field"><label>Débit de calage Qd [m³/h]</label><input id="pf_Qd" type="number" value="100" /></div>
+                <div class="field"><label>Pertes au débit Qd [m]</label><input id="pf_Jd" type="number" value="8" /></div>
+                <div class="field"><label>Hauteur pompe à Q=0 (H₀) [m]</label><input id="pf_H0" type="number" value="25" /></div>
+                <div class="field"><label>Débit nominal pompe Qn [m³/h]</label><input id="pf_Qn" type="number" value="120" /></div>
+                <div class="field"><label>HMT pompe à Qn (Hn) [m]</label><input id="pf_Hn" type="number" value="18" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="pf_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Pompage — Point de fonctionnement" data-export-res="pf_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="pf_res"></div>
+          </div>
+        </div>
       </section>
 
       <!-- ---------- VÉRIFICATEUR DE NOTE ---------- -->
@@ -752,6 +838,9 @@
                 <option value="semelle">Fondation — semelle isolée</option>
                 <option value="soutenement">Soutènement — mur en T</option>
                 <option value="canalisation">VRD — canalisation</option>
+                <option value="rdm">RDM — poutre sur 2 appuis</option>
+                <option value="acier">Acier — flambement</option>
+                <option value="pompage">Pompage — HMT &amp; puissance</option>
               </select>
             </div>
             <div class="subform-label">Coller la note (extraction automatique des valeurs)</div>
@@ -764,6 +853,166 @@
               <button class="btn ghost" data-export-title="Vérification de note de calcul" data-export-res="va_res">📄 Note PDF</button></div>
           </div>
           <div class="result" id="va_res"></div>
+        </div>
+      </section>
+
+      <!-- ---------- DÉVERSOIRS ---------- -->
+      <section class="view" id="view-deversoirs">
+        <h2 class="section-title">Déversoirs</h2>
+        <p class="section-sub">Hydraulique à surface libre : seuils rectangulaire, triangulaire, épais et déversoir d'orage.</p>
+        <div class="subtabs">
+          <button class="subtab active" data-subtab="deversoirs" data-tab="rect">Rectangulaire</button>
+          <button class="subtab" data-subtab="deversoirs" data-tab="tri">Triangulaire</button>
+          <button class="subtab" data-subtab="deversoirs" data-tab="epais">Seuil épais</button>
+          <button class="subtab" data-subtab="deversoirs" data-tab="orage">Déversoir d'orage</button>
+        </div>
+
+        <div class="subpanel active" data-subpanel="deversoirs" data-panel="rect">
+          <div class="grid2">
+            <div class="card">
+              <h3>Seuil rectangulaire (paroi mince)</h3>
+              <p class="desc">Cd automatique (Rehbock) si la pelle P est renseignée.</p>
+              <div class="form-grid">
+                <div class="field"><label>Largeur b [m]</label><input id="wr_b" type="number" value="2" /></div>
+                <div class="field"><label>Charge H [m]</label><input id="wr_H" type="number" value="0.3" /></div>
+                <div class="field"><label>Pelle P [m] (optionnel)</label><input id="wr_P" type="number" placeholder="auto Cd" /></div>
+                <div class="field"><label>Cd imposé (optionnel)</label><input id="wr_Cd" type="number" placeholder="0.62" /></div>
+                <div class="field"><label>Contractions latérales (0/1/2)</label><input id="wr_contractions" type="number" value="0" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="wr_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Déversoir rectangulaire" data-export-res="wr_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="wr_res"></div>
+          </div>
+        </div>
+
+        <div class="subpanel" data-subpanel="deversoirs" data-panel="tri">
+          <div class="grid2">
+            <div class="card">
+              <h3>Seuil triangulaire (V-notch)</h3>
+              <div class="form-grid">
+                <div class="field"><label>Angle d'ouverture θ [°]</label><input id="wt_theta" type="number" value="90" /></div>
+                <div class="field"><label>Charge H [m]</label><input id="wt_H" type="number" value="0.2" /></div>
+                <div class="field"><label>Cd (optionnel)</label><input id="wt_Cd" type="number" placeholder="0.58" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="wt_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Déversoir triangulaire" data-export-res="wt_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="wt_res"></div>
+          </div>
+        </div>
+
+        <div class="subpanel" data-subpanel="deversoirs" data-panel="epais">
+          <div class="grid2">
+            <div class="card">
+              <h3>Seuil épais (broad-crested)</h3>
+              <div class="form-grid">
+                <div class="field"><label>Largeur b [m]</label><input id="we_b" type="number" value="2" /></div>
+                <div class="field"><label>Charge H [m]</label><input id="we_H" type="number" value="0.4" /></div>
+                <div class="field"><label>Cd (optionnel)</label><input id="we_Cd" type="number" placeholder="0.85" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="we_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Seuil épais" data-export-res="we_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="we_res"></div>
+          </div>
+        </div>
+
+        <div class="subpanel" data-subpanel="deversoirs" data-panel="orage">
+          <div class="grid2">
+            <div class="card">
+              <h3>Déversoir d'orage (latéral)</h3>
+              <p class="desc">Répartition amont / conservé (vers station) / déversé.</p>
+              <div class="form-grid">
+                <div class="field"><label>Débit amont [L/s]</label><input id="wo_Qamont" type="number" value="600" /></div>
+                <div class="field"><label>Débit conservé [L/s]</label><input id="wo_Qconserve" type="number" value="150" /></div>
+                <div class="field"><label>Longueur seuil b [m]</label><input id="wo_b" type="number" value="3" /></div>
+                <div class="field"><label>Cd (optionnel)</label><input id="wo_Cd" type="number" placeholder="0.62" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="wo_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Déversoir d'orage" data-export-res="wo_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="wo_res"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- RÉSEAUX BOUES ---------- -->
+      <section class="view" id="view-boues">
+        <h2 class="section-title">Réseaux de boues</h2>
+        <p class="section-sub">Siccité et masse volumique, débit de matière sèche, épaississement et pertes de charge corrigées.</p>
+        <div class="subtabs">
+          <button class="subtab active" data-subtab="boues" data-tab="bilan">Matière sèche</button>
+          <button class="subtab" data-subtab="boues" data-tab="epaiss">Épaississement</button>
+          <button class="subtab" data-subtab="boues" data-tab="pertes">Pertes de charge</button>
+        </div>
+
+        <div class="subpanel active" data-subpanel="boues" data-panel="bilan">
+          <div class="grid2">
+            <div class="card">
+              <h3>Propriétés &amp; matière sèche</h3>
+              <div class="form-grid">
+                <div class="field"><label>Débit boue Q [m³/h]</label><input id="sl_Q" type="number" value="10" /></div>
+                <div class="field"><label>Siccité C [% MS]</label><input id="sl_C" type="number" value="4" /></div>
+                <div class="field"><label>ρ matières sèches [kg/m³]</label><input id="sl_rhoS" type="number" value="1450" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="sl_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Boues — matière sèche" data-export-res="sl_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="sl_res"></div>
+          </div>
+        </div>
+
+        <div class="subpanel" data-subpanel="boues" data-panel="epaiss">
+          <div class="grid2">
+            <div class="card">
+              <h3>Épaississement / déshydratation</h3>
+              <p class="desc">Conservation de la matière sèche : Q₂ = Q₁·C₁/C₂.</p>
+              <div class="form-grid">
+                <div class="field"><label>Débit initial Q₁ [m³/h]</label><input id="se_Q1" type="number" value="100" /></div>
+                <div class="field"><label>Siccité initiale C₁ [%]</label><input id="se_C1" type="number" value="1" /></div>
+                <div class="field"><label>Siccité finale C₂ [%]</label><input id="se_C2" type="number" value="4" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="se_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Boues — épaississement" data-export-res="se_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="se_res"></div>
+          </div>
+        </div>
+
+        <div class="subpanel" data-subpanel="boues" data-panel="pertes">
+          <div class="grid2">
+            <div class="card">
+              <h3>Pertes de charge — conduite de boue</h3>
+              <div class="form-grid">
+                <div class="field"><label>Débit Q [L/s]</label><input id="sp_Qls" type="number" value="20" /></div>
+                <div class="field"><label>Diamètre D [mm]</label><input id="sp_D" type="number" value="150" /></div>
+                <div class="field"><label>Longueur L [m]</label><input id="sp_L" type="number" value="200" /></div>
+                <div class="field"><label>Siccité C [%]</label><input id="sp_C" type="number" value="4" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="sp_calc">Calculer</button>
+                <button class="btn ghost" data-export-title="Boues — pertes de charge" data-export-res="sp_res">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="sp_res"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- RÉPARTITEUR ---------- -->
+      <section class="view" id="view-repartiteur">
+        <h2 class="section-title">Répartiteur de débit (ouvrage passif)</h2>
+        <p class="section-sub">L'ouvrage répartit passivement un débit entrant sur plusieurs tuyaux : le niveau d'eau s'établit pour que la somme des débits sortants égale le débit entrant. Des seuils à des niveaux différents créent une régulation par paliers.</p>
+        <div class="grid2">
+          <div class="card">
+            <h3>Configuration</h3>
+            <div class="field" style="max-width:220px"><label>Débit entrant total [L/s]</label><input id="di_Qtotal" type="number" value="300" /></div>
+            <div class="subform-label">Sorties (nom · Ø [mm] · Cd · niveau radier z [m])</div>
+            <div id="di_outlets"></div>
+            <button class="add-btn" id="di_add">+ Ajouter une sortie</button>
+            <div class="btn-row"><button class="btn ambre" id="di_calc">▶ Répartir</button>
+              <button class="btn ghost" data-export-title="Répartiteur de débit" data-export-res="di_res">📄 Note PDF</button></div>
+          </div>
+          <div class="result" id="di_res"></div>
         </div>
       </section>
 
@@ -815,6 +1064,11 @@
 <script src="js/engine/combos.js"></script>
 <script src="js/engine/pressure.js"></script>
 <script src="js/engine/pumping.js"></script>
+<script src="js/engine/weirs.js"></script>
+<script src="js/engine/sludge.js"></script>
+<script src="js/engine/distribution.js"></script>
+<script src="js/engine/channel.js"></script>
+<script src="js/engine/rainwater.js"></script>
 <script src="js/engine/validator.js"></script>
 <!-- Interface -->
 <script src="js/ui/dom.js"></script>
@@ -832,6 +1086,9 @@
 <script src="js/ui/combos.ui.js"></script>
 <script src="js/ui/pressure.ui.js"></script>
 <script src="js/ui/pumping.ui.js"></script>
+<script src="js/ui/weirs.ui.js"></script>
+<script src="js/ui/sludge.ui.js"></script>
+<script src="js/ui/distribution.ui.js"></script>
 <script src="js/ui/validator.ui.js"></script>
 <script src="js/ui/app.js"></script>
 </body>

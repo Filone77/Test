@@ -42,11 +42,32 @@
     return `<div class="kpi"><div class="kpi-label">${label}</div><div class="kpi-val">${val} <small>${unit}</small></div></div>`;
   }
 
+  function pointFct() {
+    const r = GC.pumping.pointFonctionnement({
+      Hgeo: D.num('pf_Hgeo'), Qd: D.num('pf_Qd'), Jd: D.num('pf_Jd'),
+      H0: D.num('pf_H0'), Qn: D.num('pf_Qn'), Hn: D.num('pf_Hn')
+    });
+    let html = '<div class="result-head"><span class="badge badge-ok">Pompe × Réseau</span><h4>Point de fonctionnement</h4></div>';
+    html += '<div class="kpis">' +
+      `<div class="kpi"><div class="kpi-label">Débit Qop</div><div class="kpi-val">${D.fmt(r.Qop, 1)} <small>m³/h</small></div></div>` +
+      `<div class="kpi"><div class="kpi-label">HMT Hop</div><div class="kpi-val">${D.fmt(r.Hop, 1)} <small>m</small></div></div>` +
+      '</div>';
+    html += '<div id="pf_plot" class="plotbox"></div>';
+    html += '<p class="muted">Intersection de la courbe caractéristique de la pompe (H₀ − b·Q²) et de la courbe du réseau (Hgéo + r·Q²).</p>';
+    D.$('#pf_res').innerHTML = html;
+    GC.plot.courbes(D.$('#pf_plot'), [
+      { name: 'Pompe', color: '#1b3a5b', data: r.courbes.pompe },
+      { name: 'Réseau', color: '#e08a1e', data: r.courbes.reseau }
+    ], { xlabel: 'Q [m³/h]', ylabel: 'H [m]', point: r.point });
+  }
+
   function init() {
     D.$('#pu_calc').addEventListener('click', compute);
+    D.$('#pf_calc').addEventListener('click', pointFct);
     compute();
+    pointFct();
   }
 
   GC.modules = GC.modules || {};
-  GC.modules.pumping = { init, compute };
+  GC.modules.pumping = { init, compute, pointFct };
 })();

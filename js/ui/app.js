@@ -46,6 +46,9 @@
     GC.modules.combos.init();
     GC.modules.pressure.init();
     GC.modules.pumping.init();
+    GC.modules.weirs.init();
+    GC.modules.sludge.init();
+    GC.modules.distribution.init();
     GC.modules.validator.init();
 
     // Premiers calculs béton (valeurs par défaut)
@@ -66,7 +69,7 @@
 
     // Vue initiale (depuis le hash éventuel)
     const start = (location.hash || '#accueil').slice(1);
-    const views = ['accueil', 'beton', 'elements', 'structures', 'acier', 'soutenement', 'geotech', 'metre', 'vrd', 'conduite', 'pompage', 'charges', 'combinaisons', 'validation', 'apropos'];
+    const views = ['accueil', 'beton', 'elements', 'structures', 'acier', 'soutenement', 'geotech', 'metre', 'vrd', 'conduite', 'pompage', 'deversoirs', 'boues', 'repartiteur', 'charges', 'combinaisons', 'validation', 'apropos'];
     showView(views.indexOf(start) >= 0 ? start : 'accueil');
 
     // Boutons "Démarrer" de l'accueil

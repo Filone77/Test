@@ -31,6 +31,24 @@
     canalisation: [
       { id: 'Qls', label: 'Débit Q [L/s]', def: 120 }, { id: 'I', label: 'Pente I [m/m]', def: 0.005 },
       { id: 'K', label: 'Strickler K', def: 80 }, { id: 'DN_note', label: 'DN adopté (note) [mm]', def: 315, note: true }
+    ],
+    rdm: [
+      { id: 'L', label: 'Portée L [m]', def: 6 }, { id: 'w', label: 'Charge w [kN/m]', def: 10 },
+      { id: 'EI', label: 'Rigidité EI [kN·m²]', def: 10000 },
+      { id: 'Mmax_note', label: 'Mmax de la note [kN·m]', def: 45, note: true },
+      { id: 'fleche_note', label: 'Flèche de la note [mm]', def: 16.875, note: true }
+    ],
+    acier: [
+      { id: 'A', label: 'Aire A [cm²]', def: 28.5 }, { id: 'Iz', label: 'Inertie Iz [cm⁴]', def: 142 },
+      { id: 'fy', label: 'fy [MPa]', def: 235 }, { id: 'Lcr', label: 'Lcr [m]', def: 3 }, { id: 'NEd', label: 'NEd [kN]', def: 200 },
+      { id: 'taux_note', label: 'Taux de travail (note)', def: 0.81, note: true }
+    ],
+    pompage: [
+      { id: 'Q', label: 'Q [m³/h]', def: 100 }, { id: 'Hgeo', label: 'Hgéo [m]', def: 15 },
+      { id: 'Jasp', label: 'Pertes asp. [m]', def: 0.5 }, { id: 'Jref', label: 'Pertes ref. [m]', def: 4.5 },
+      { id: 'etaPompe', label: 'η pompe', def: 0.7 }, { id: 'etaMoteur', label: 'η moteur', def: 0.9 },
+      { id: 'HMT_note', label: 'HMT de la note [m]', def: 20, note: true },
+      { id: 'Pelec_note', label: 'P. élec. de la note [kW]', def: 8.65, note: true }
     ]
   };
 

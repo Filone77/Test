@@ -54,6 +54,50 @@
     D.$('#vt_res').innerHTML = html;
   }
 
+  function caniveau() {
+    const r = GC.channel.dimensionner({
+      Qls: D.num('ca_Qls'), forme: D.val('ca_forme'),
+      b: D.num('ca_b'), m: D.num('ca_m'), I: D.num('ca_I'), K: D.num('ca_K'),
+      revanche: D.num('ca_revanche')
+    });
+    let html = `<div class="result-head">${D.badge(r.autocurage && r.vitesseOk ? 'OK' : 'NOK')}<h4>Caniveau (Manning-Strickler)</h4></div>`;
+    html += D.table(['Grandeur', 'Valeur', 'Unité'], [
+      ['Débit à évacuer', D.fmt(r.Qls, 1), 'L/s'],
+      ['<b>Tirant d’eau normal</b>', '<b>' + D.fmt(r.yNormal, 3) + '</b>', 'm'],
+      ['Hauteur totale (+ revanche)', D.fmt(r.hTotal, 3), 'm'],
+      ['Section mouillée', D.fmt(r.A, 4), 'm²'],
+      ['Rayon hydraulique Rh', D.fmt(r.Rh, 3), 'm'],
+      ['Vitesse V', D.fmt(r.V, 2) + (r.autocurage && r.vitesseOk ? ' ✓' : ' ⚠'), 'm/s'],
+      ['Nombre de Froude', D.fmt(r.froude, 2) + ' (' + r.regime + ')', '—']
+    ]);
+    if (r.messages.length) html += '<ul class="notes">' + r.messages.map((m) => `<li>${m}</li>`).join('') + '</ul>';
+    D.$('#ca_res').innerHTML = html;
+  }
+
+  function recupEP() {
+    const C = parseFloat(D.val('ep_toiture'));
+    const r = GC.rainwater.dimensionner({
+      surface: D.num('ep_surface'), pluvio: D.num('ep_pluvio'),
+      Crunoff: C, demandeJour: D.num('ep_demande'), joursStockage: D.num('ep_jours')
+    });
+    let html = `<div class="result-head"><span class="badge badge-ok">Eaux pluviales</span><h4>Bâche de récupération</h4></div>`;
+    html += '<div class="kpis">' +
+      `<div class="kpi"><div class="kpi-label">Cuve conseillée</div><div class="kpi-val">${D.fmt(r.cuveNormalisee, 1)} <small>m³</small></div></div>` +
+      `<div class="kpi"><div class="kpi-label">Couverture besoin</div><div class="kpi-val">${D.fmt(r.tauxCouverture, 0)} <small>%</small></div></div>` +
+      `<div class="kpi"><div class="kpi-label">Économie</div><div class="kpi-val">${D.fmt(r.economieAn, 0)} <small>m³/an</small></div></div>` +
+      '</div>';
+    html += D.table(['Grandeur', 'Valeur', 'Unité'], [
+      ['Volume collectable annuel', D.fmt(r.Vcol, 1), 'm³/an'],
+      ['Demande annuelle', D.fmt(r.Vdem, 1), 'm³/an'],
+      ['Facteur limitant', r.facteurLimitant, '—'],
+      ['<b>Volume utile (' + D.num('ep_jours') + ' j)</b>', '<b>' + D.fmt(r.Vutile, 2) + '</b>', 'm³'],
+      ['Cuve normalisée retenue', D.fmt(r.cuveNormalisee, 1), 'm³'],
+      ['Autonomie (cuve pleine)', D.fmt(r.autonomie, 0), 'jours']
+    ]);
+    html += '<ul class="notes">' + r.messages.map((m) => `<li>${m}</li>`).join('') + '</ul>';
+    D.$('#ep_res').innerHTML = html;
+  }
+
   function chaussee() {
     const r = GC.vrd.chausseeCBR({ P: D.num('vch_P'), CBR: D.num('vch_CBR') });
     let html = `<div class="result-head"><span class="badge badge-ok">Indicatif (CBR)</span><h4>Corps de chaussée</h4></div>`;
@@ -67,11 +111,18 @@
   }
 
   function init() {
+    // sélecteur de toiture (eaux pluviales)
+    const tt = D.$('#ep_toiture');
+    if (tt) Object.keys(GC.rainwater.TOITURES).forEach((k) => {
+      tt.appendChild(D.el('option', { value: GC.rainwater.TOITURES[k], selected: k.indexOf('Tuiles') === 0 ? 'selected' : null }, [k]));
+    });
     D.$('#vp_calc').addEventListener('click', pluvial);
     D.$('#vc_calc').addEventListener('click', canal);
     D.$('#vt_calc').addEventListener('click', terr);
     D.$('#vch_calc').addEventListener('click', chaussee);
-    pluvial(); canal(); terr(); chaussee();
+    D.$('#ca_calc').addEventListener('click', caniveau);
+    D.$('#ep_calc').addEventListener('click', recupEP);
+    pluvial(); canal(); terr(); chaussee(); caniveau(); recupEP();
   }
 
   GC.modules = GC.modules || {};

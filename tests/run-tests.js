@@ -18,6 +18,11 @@ const combos = require('../js/engine/combos.js');
 const pressure = require('../js/engine/pressure.js');
 const pumping = require('../js/engine/pumping.js');
 const validator = require('../js/engine/validator.js');
+const weirs = require('../js/engine/weirs.js');
+const sludge = require('../js/engine/sludge.js');
+const distribution = require('../js/engine/distribution.js');
+const channel = require('../js/engine/channel.js');
+const rainwater = require('../js/engine/rainwater.js');
 
 let passed = 0, failed = 0;
 function check(label, got, expected, tol) {
@@ -217,6 +222,52 @@ const v2 = validator.verifier('ba_flexion', { MEd: 200, b: 300, h: 500, d: 450, 
 checkBool('note non conforme (As=900 < 1150)', v2.verdict === 'NON CONFORME', true);
 const v3 = validator.verifier('canalisation', { Qls: 120, I: 0.005, K: 80, DN_note: 315 });
 checkBool('canalisation : verdict produit', typeof v3.verdict === 'string', true);
+const v4 = validator.verifier('rdm', { L: 6, w: 10, EI: 10000, Mmax_note: 45, fleche_note: 16.875 });
+checkBool('RDM conforme (Mmax=45, f=16,9)', v4.verdict === 'CONFORME', true);
+const v5 = validator.verifier('acier', { A: 28.5, Iz: 142, fy: 235, Lcr: 3, NEd: 200, taux_note: 0.81 });
+checkBool('acier conforme (taux≈0,81)', v5.verdict === 'CONFORME', true);
+
+console.log('\n=== DÉVERSOIRS ===');
+const wr = weirs.rectangulaire({ b: 2, H: 0.3, Cd: 0.62 });
+check('Seuil rectangulaire Q [m³/s]', wr.Q, 0.602, 0.02);
+const wt = weirs.triangulaire({ theta: 90, H: 0.2, Cd: 0.58 });
+check('Seuil triangulaire (V90°) Q [L/s]', wt.Qls, 24.5, 0.03);
+const wo = weirs.deversoirOrage({ Qamont: 600, Qconserve: 150, b: 3, Cd: 0.62 });
+check('Déversoir d’orage : débit déversé [L/s]', wo.Qdeverse, 450, 0.01);
+
+console.log('\n=== RÉSEAUX BOUES ===');
+const sp = sludge.proprietes({ C: 4, rhoS: 1450 });
+check('Masse volumique boue 4% [kg/m³]', sp.rho, 1012.6, 0.01);
+const sm = sludge.bilanMasse({ Q: 10, C: 4, rhoS: 1450 });
+check('Débit matière sèche [kg/h]', sm.Mds_kgh, 405, 0.02);
+const se = sludge.epaississement({ Q1: 100, C1: 1, C2: 4 });
+check('Épaississement : volume final [m³/h]', se.Q2, 25, 0.01);
+
+console.log('\n=== RÉPARTITEUR PASSIF ===');
+const dr = distribution.repartition({ Qtotal: 300, outlets: [
+  { nom: 'T1', Cd: 0.6, D: 200, z: 0 }, { nom: 'T2', Cd: 0.6, D: 200, z: 0 }, { nom: 'T3', Cd: 0.6, D: 200, z: 0 }
+] });
+check('Niveau d’équilibre [m]', dr.niveau, 1.435, 0.03);
+check('Débit par tuyau identique [L/s]', dr.detail[0].Q, 100, 0.03);
+
+console.log('\n=== POINT DE FONCTIONNEMENT ===');
+const pf = pumping.pointFonctionnement({ Hgeo: 10, Qd: 100, Jd: 8, H0: 25, Qn: 120, Hn: 18 });
+check('Débit de fonctionnement Qop [m³/h]', pf.Qop, 108, 0.02);
+check('HMT de fonctionnement Hop [m]', pf.Hop, 19.33, 0.02);
+
+console.log('\n=== CANIVEAU (Manning) ===');
+const ch = channel.capacite({ forme: 'rectangulaire', b: 0.3, y: 0.2, I: 0.01, K: 70 });
+check('Vitesse [m/s]', ch.V, 1.36, 0.03);
+check('Débit [L/s]', ch.Qls, 81.6, 0.03);
+const chd = channel.dimensionner({ Qls: 81.6, forme: 'rectangulaire', b: 0.3, I: 0.01, K: 70 });
+check('Profondeur normale [m]', chd.yNormal, 0.2, 0.04);
+
+console.log('\n=== RÉCUPÉRATION EAUX PLUVIALES ===');
+const rw = rainwater.dimensionner({ surface: 100, pluvio: 700, Crunoff: 0.9, etaFiltre: 0.9, demandeJour: 200 });
+check('Volume collectable [m³/an]', rw.Vcol, 56.7, 0.02);
+check('Volume utile cuve [m³]', rw.Vutile, 3.26, 0.03);
+check('Taux de couverture [%]', rw.tauxCouverture, 77.7, 0.03);
+checkBool('cuve normalisée = 4 m³', rw.cuveNormalisee === 4, true);
 
 console.log(`\n===========================================`);
 console.log(`Résultat : ${passed} réussis, ${failed} échoués`);

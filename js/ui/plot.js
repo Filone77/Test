@@ -171,5 +171,44 @@
     container.appendChild(s);
   }
 
-  GC.plot = { diagram, beamSchematic, interaction };
+  /** Tracé de plusieurs courbes y(x) sur un même graphe, avec point remarquable. */
+  function courbes(container, series, opt) {
+    container.innerHTML = '';
+    opt = opt || {};
+    const W = 560, H = 320, mL = 56, mR = 18, mT = 26, mB = 42;
+    const s = svg(W, H);
+    let xMax = 0, yMax = 0;
+    series.forEach((se) => se.data.forEach((p) => { xMax = Math.max(xMax, p.x); yMax = Math.max(yMax, p.y); }));
+    if (opt.point) { xMax = Math.max(xMax, opt.point.x); yMax = Math.max(yMax, opt.point.y); }
+    xMax *= 1.05; yMax *= 1.1;
+    const px = (x) => mL + x / (xMax || 1) * (W - mL - mR);
+    const py = (y) => (H - mB) - y / (yMax || 1) * (H - mT - mB);
+
+    s.appendChild(node('rect', { x: mL, y: mT, width: W - mL - mR, height: H - mT - mB, fill: '#fff', stroke: '#e1e6ee' }));
+    series.forEach((se) => {
+      let d = '';
+      se.data.forEach((p, i) => { d += (i === 0 ? 'M' : 'L') + px(p.x) + ' ' + py(p.y); });
+      s.appendChild(node('path', { d, fill: 'none', stroke: se.color, 'stroke-width': 2 }));
+    });
+    if (opt.point) {
+      s.appendChild(node('line', { x1: px(opt.point.x), y1: py(0), x2: px(opt.point.x), y2: py(opt.point.y), stroke: '#888', 'stroke-dasharray': '4 3' }));
+      s.appendChild(node('line', { x1: mL, y1: py(opt.point.y), x2: px(opt.point.x), y2: py(opt.point.y), stroke: '#888', 'stroke-dasharray': '4 3' }));
+      s.appendChild(node('circle', { cx: px(opt.point.x), cy: py(opt.point.y), r: 5, fill: '#c0392b', stroke: '#fff', 'stroke-width': 1.5 }));
+      s.appendChild(text(px(opt.point.x) + 8, py(opt.point.y) - 6, `(${GC.dom.fmt(opt.point.x, 0)} ; ${GC.dom.fmt(opt.point.y, 1)})`, { 'font-size': 11, fill: '#c0392b', 'font-weight': 700 }));
+    }
+    // légende
+    series.forEach((se, i) => {
+      s.appendChild(node('line', { x1: mL + 8 + i * 130, y1: mT - 10, x2: mL + 26 + i * 130, y2: mT - 10, stroke: se.color, 'stroke-width': 3 }));
+      s.appendChild(text(mL + 30 + i * 130, mT - 6, se.name, { 'font-size': 11, fill: '#34425a' }));
+    });
+    for (let k = 0; k <= 4; k++) {
+      s.appendChild(text(px(xMax * k / 4), H - mB + 14, GC.dom.fmt(xMax * k / 4, 0), { 'font-size': 9, fill: '#5a6678', 'text-anchor': 'middle' }));
+      s.appendChild(text(mL - 6, py(yMax * k / 4) + 3, GC.dom.fmt(yMax * k / 4, 0), { 'font-size': 9, fill: '#5a6678', 'text-anchor': 'end' }));
+    }
+    s.appendChild(text(W / 2, H - 6, opt.xlabel || '', { 'font-size': 11, fill: '#5a6678', 'text-anchor': 'middle' }));
+    s.appendChild(text(14, mT + 4, opt.ylabel || '', { 'font-size': 11, fill: '#5a6678' }));
+    container.appendChild(s);
+  }
+
+  GC.plot = { diagram, beamSchematic, interaction, courbes };
 })();
