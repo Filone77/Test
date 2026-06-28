@@ -143,8 +143,9 @@ const path = require('path');
   await page.screenshot({ path: path.join(outDir, 'apercu-terrassement.png'), fullPage: true });
   await page.click('[data-subtab="vrd"][data-tab="bassin"]'); await page.waitForTimeout(120); await page.click('#ba_calc'); await page.waitForTimeout(200);
   await page.screenshot({ path: path.join(outDir, 'apercu-bassin.png'), fullPage: true });
-  await page.click('[data-subtab="vrd"][data-tab="caniveau"]'); await page.waitForTimeout(120); await page.click('#ca_remous'); await page.waitForTimeout(200);
+  await page.click('[data-subtab="vrd"][data-tab="caniveau"]'); await page.waitForTimeout(120); await page.click('#ca_remous'); await page.click('#ca_ressaut'); await page.waitForTimeout(200);
   await page.screenshot({ path: path.join(outDir, 'apercu-remous.png'), fullPage: true });
+  await snap('reseau', 'apercu-reseau.png', async () => { await page.click('#nw_calc'); });
   await page.click('.nav-item[data-view="pompage"]'); await page.click('[data-subtab="pompage"][data-tab="pf"]'); await page.waitForTimeout(120); await page.click('#pf_calc'); await page.waitForTimeout(150);
   checks.pf = await page.textContent('#pf_res');
   const pfSvg = await page.$$eval('#pf_res svg', (els) => els.length);
@@ -164,6 +165,12 @@ const path = require('path');
   const epSimSvg = await page.$$eval('#ep_simres svg', (els) => els.length);
   await page.click('[data-subtab="vrd"][data-tab="caniveau"]'); await page.waitForTimeout(100); await page.click('#ca_remous'); await page.waitForTimeout(150);
   checks.remous = await page.textContent('#ca_remres');
+  await page.click('#ca_ressaut'); await page.waitForTimeout(120);
+  checks.ressaut = await page.textContent('#ca_ressres');
+  // Réseau gravitaire — profil en long
+  await page.click('.nav-item[data-view="reseau"]'); await page.click('#nw_calc'); await page.waitForTimeout(150);
+  checks.reseau = await page.textContent('#nw_res');
+  const nwSvg = await page.$$eval('#nw_res svg', (els) => els.length);
   // Note de calcul (générateur PDF) — test de la fonction de construction
   checks.report = await page.evaluate(() =>
     GC.report.build('Test', [['a', 'b']], '<p>résultat</p>').indexOf('Note de calcul') >= 0);
@@ -210,6 +217,10 @@ const path = require('path');
   console.log(`  ${epSimSvg >= 1 ? '✓' : '✗'} Simulation EP : ${epSimSvg} courbe SVG`);
   ok &= epSimSvg >= 1;
   ok &= has('Courbe de remous', checks.remous, 'remous');
+  ok &= has('Ressaut hydraulique', checks.ressaut, 'conjugué');
+  ok &= has('Réseau / profil', checks.reseau, 'Fil d’eau');
+  console.log(`  ${nwSvg >= 1 ? '✓' : '✗'} Réseau : ${nwSvg} profil SVG`);
+  ok &= nwSvg >= 1;
 
   console.log('\n--- Erreurs JS détectées ---');
   if (errors.length === 0) console.log('  ✓ Aucune erreur console / page');

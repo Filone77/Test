@@ -115,13 +115,13 @@
    * @param {object} p {surface, Crunoff, etaFiltre, pluvio (mm/an), nJoursPluie,
    *                     demandeJour (L/j), Vcuve (m³)}
    */
-  function simulation(p) {
+  /** Bilan réservoir sur une chronique journalière fournie (modèle YAS). */
+  function simulerReservoir(serie, p) {
     const eta = p.etaFiltre != null ? p.etaFiltre : 0.9;
-    const serie = chroniqueJournaliere(p.pluvio, p.nJoursPluie || 110);
     const demandeJour = p.demandeJour / 1000; // m³/j
     const V = p.Vcuve;
     let S = 0, met = 0, dem = 0, spill = 0, fromMains = 0, joursVides = 0;
-    for (let j = 0; j < 365; j++) {
+    for (let j = 0; j < serie.length; j++) {
       const inflow = p.surface * serie[j] / 1000 * p.Crunoff * eta; // m³
       let Sf = S + inflow;
       if (Sf > V) { spill += Sf - V; Sf = V; }
@@ -132,6 +132,7 @@
     }
     return {
       Vcuve: V,
+      jours: serie.length,
       pluvioSimulee: round(serie.reduce((a, b) => a + b, 0), 0),
       tauxCouverture: round(dem > 0 ? met / dem * 100 : 0, 1),
       volumeRecupere: round(met, 1),
@@ -139,6 +140,11 @@
       debordement: round(spill, 1),
       joursVides
     };
+  }
+
+  function simulation(p) {
+    const serie = p.serie || chroniqueJournaliere(p.pluvio, p.nJoursPluie || 110);
+    return simulerReservoir(serie, p);
   }
 
   /** Courbe taux de couverture en fonction du volume de cuve. */
@@ -153,5 +159,20 @@
     return pts;
   }
 
-  return { CUVES, TOITURES, PROFIL_MENSUEL, dimensionner, chroniqueJournaliere, simulation, courbeCouverture };
+  /** Parse une chronique CSV/texte → tableau de hauteurs [mm]. Tolère date,valeur. */
+  function parseChronique(texte) {
+    const lignes = (texte || '').split(/\r?\n/);
+    const out = [];
+    for (const l of lignes) {
+      if (!l.trim()) continue;
+      // virgule décimale (entre deux chiffres) → point, avant de découper les colonnes
+      const norm = l.replace(/(\d),(\d)/g, '$1.$2');
+      const toks = norm.split(/[;,\t ]+/).filter((t) => t !== '');
+      const v = parseFloat(toks[toks.length - 1]);
+      if (!isNaN(v)) out.push(v);
+    }
+    return out;
+  }
+
+  return { CUVES, TOITURES, PROFIL_MENSUEL, dimensionner, chroniqueJournaliere, simulerReservoir, simulation, courbeCouverture, parseChronique };
 });

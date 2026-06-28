@@ -26,6 +26,7 @@
       <div class="nav-item" data-view="geotech"><span class="ico">⛏</span> Géotech &amp; Blindage</div>
       <div class="nav-item" data-view="metre"><span class="ico">∑</span> Métré &amp; Fondations</div>
       <div class="nav-item" data-view="vrd"><span class="ico">⌳</span> VRD</div>
+      <div class="nav-item" data-view="reseau"><span class="ico">⛆</span> Réseau / Profil en long</div>
       <div class="nav-item" data-view="conduite"><span class="ico">⊚</span> Conduite sous pression</div>
       <div class="nav-item" data-view="pompage"><span class="ico">⏿</span> Station de pompage</div>
       <div class="nav-item" data-view="deversoirs"><span class="ico">⫰</span> Déversoirs</div>
@@ -135,6 +136,11 @@
             <div class="mc-ico">⋔</div><h3>Répartiteur de débit</h3>
             <p>Distribution passive d'un débit sur plusieurs tuyaux.</p>
             <span class="mc-tag">Hydraulique</span>
+          </div>
+          <div class="module-card" data-goto="reseau">
+            <div class="mc-ico">⛆</div><h3>Réseau / Profil en long</h3>
+            <p>Cotes des regards (TN, fil d'eau, fond de fouille), écoulement partiel, profil.</p>
+            <span class="mc-tag">Gravitaire</span>
           </div>
         </div>
       </section>
@@ -682,6 +688,19 @@
             </div>
             <div class="result" id="ca_remres"></div>
           </div>
+          <div class="grid2" style="margin-top:18px">
+            <div class="card">
+              <h3>Ressaut hydraulique</h3>
+              <p class="desc">Profondeurs conjuguées en canal rectangulaire (largeur b ci-dessus).</p>
+              <div class="form-grid">
+                <div class="field"><label>Débit Q [m³/s]</label><input id="ca_Qres" type="number" value="0.5" step="0.01" /></div>
+                <div class="field"><label>Tirant amont y₁ (torrentiel) [m]</label><input id="ca_y1" type="number" value="0.15" step="0.01" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="ca_ressaut">Calculer le ressaut</button>
+                <button class="btn ghost" data-export-title="VRD — Ressaut hydraulique" data-export-res="ca_ressres">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="ca_ressres"></div>
+          </div>
         </div>
 
         <div class="subpanel" data-subpanel="vrd" data-panel="recupEP">
@@ -711,6 +730,11 @@
               </div>
               <div class="btn-row"><button class="btn ambre" id="ep_sim">▶ Simuler 365 jours</button>
                 <button class="btn ghost" data-export-title="VRD — Simulation récupération EP" data-export-res="ep_simres">📄 Note PDF</button></div>
+              <div class="subform-label">Chronique de pluie réelle (CSV)</div>
+              <p class="muted" style="margin:0 0 6px">Fichier texte : une valeur de pluie [mm] par ligne (ou « date ; valeur »).</p>
+              <input id="ep_csv" type="file" accept=".csv,.txt" style="font-size:0.85rem" />
+              <div class="rowline" style="margin-top:8px"><button class="btn ghost" id="ep_simcsv">Simuler la chronique importée</button>
+                <span id="ep_csvmsg" class="muted" style="font-size:0.78rem"></span></div>
             </div>
             <div class="result" id="ep_simres"></div>
           </div>
@@ -795,6 +819,24 @@
           </div>
           <div class="result" id="cb_res"></div>
         </div>
+      </section>
+
+      <!-- ---------- RÉSEAU / PROFIL EN LONG ---------- -->
+      <section class="view" id="view-reseau">
+        <h2 class="section-title">Réseau gravitaire — Profil en long</h2>
+        <p class="section-sub">Cotes par regard (terrain, fil d'eau, génératrice supérieure, fond de fouille) et écoulement à surface libre (taux de remplissage, autocurage). Saisissez les regards de l'amont vers l'aval ; les colonnes DN/DE/Q/pente concernent le tronçon partant du regard.</p>
+        <div class="card">
+          <h3>Regards &amp; tronçons</h3>
+          <div class="form-grid" style="max-width:480px">
+            <div class="field"><label>Cote fil d'eau de départ [m]</label><input id="nw_fileau" type="number" value="98.5" step="0.01" /></div>
+            <div class="field"><label>Lit de pose [m]</label><input id="nw_elit" type="number" value="0.10" step="0.01" /></div>
+          </div>
+          <div id="nw_regards" style="margin-top:12px;overflow-x:auto"></div>
+          <button class="add-btn" id="nw_add">+ Ajouter un regard</button>
+          <div class="btn-row"><button class="btn ambre" id="nw_calc">▶ Calculer le profil</button>
+            <button class="btn ghost" data-export-title="Réseau — Profil en long" data-export-res="nw_res">📄 Note PDF</button></div>
+        </div>
+        <div class="result" id="nw_res"></div>
       </section>
 
       <!-- ---------- CONDUITE SOUS PRESSION ---------- -->
@@ -1121,6 +1163,7 @@
 <script src="js/engine/rainwater.js"></script>
 <script src="js/engine/earthwork.js"></script>
 <script src="js/engine/detention.js"></script>
+<script src="js/engine/network.js"></script>
 <script src="js/engine/validator.js"></script>
 <!-- Interface -->
 <script src="js/ui/dom.js"></script>
@@ -1141,6 +1184,7 @@
 <script src="js/ui/weirs.ui.js"></script>
 <script src="js/ui/sludge.ui.js"></script>
 <script src="js/ui/distribution.ui.js"></script>
+<script src="js/ui/network.ui.js"></script>
 <script src="js/ui/validator.ui.js"></script>
 <script src="js/ui/app.js"></script>
 </body>

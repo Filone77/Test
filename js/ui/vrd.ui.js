@@ -82,23 +82,57 @@
     GC.plot.diagram(D.$('#ba_plot'), r.courbe, { yKey: 'y', color: '#1b3a5b', fill: 'rgba(27,58,91,0.10)', title: 'Volume stocké selon la durée de pluie', unit: 'm³' });
   }
 
-  function recupSim() {
+  let serieImportee = null;
+
+  function recupSim(serie) {
     const C = parseFloat(D.val('ep_toiture'));
     const base = { surface: D.num('ep_surface'), Crunoff: C, pluvio: D.num('ep_pluvio'), demandeJour: D.num('ep_demande'), nJoursPluie: D.num('ep_npluie') };
+    const importee = serie && serie.length;
+    if (importee) base.serie = serie;
     const r = GC.rainwater.simulation(Object.assign({ Vcuve: D.num('ep_vcuve') }, base));
-    let html = `<div class="result-head"><span class="badge badge-ok">Simulation 365 j</span><h4>Couverture réelle (cuve ${D.fmt(r.Vcuve, 1)} m³)</h4></div>`;
+    let html = `<div class="result-head"><span class="badge badge-ok">${importee ? 'Chronique importée (' + r.jours + ' j)' : 'Simulation 365 j'}</span><h4>Couverture réelle (cuve ${D.fmt(r.Vcuve, 1)} m³)</h4></div>`;
     html += D.table(['Grandeur', 'Valeur', 'Unité'], [
-      ['Pluviométrie simulée', D.fmt(r.pluvioSimulee, 0), 'mm/an'],
+      [importee ? 'Pluviométrie de la chronique' : 'Pluviométrie simulée', D.fmt(r.pluvioSimulee, 0), 'mm'],
       ['<b>Taux de couverture réel</b>', '<b>' + D.fmt(r.tauxCouverture, 1) + '</b>', '%'],
-      ['Volume récupéré', D.fmt(r.volumeRecupere, 1), 'm³/an'],
-      ['Complément réseau', D.fmt(r.complementReseau, 1), 'm³/an'],
-      ['Débordement (trop-plein)', D.fmt(r.debordement, 1), 'm³/an'],
-      ['Jours cuve vide', D.fmt(r.joursVides, 0), 'j/an']
+      ['Volume récupéré', D.fmt(r.volumeRecupere, 1), 'm³'],
+      ['Complément réseau', D.fmt(r.complementReseau, 1), 'm³'],
+      ['Débordement (trop-plein)', D.fmt(r.debordement, 1), 'm³'],
+      ['Jours cuve vide', D.fmt(r.joursVides, 0), 'j']
     ]);
     html += '<div id="ep_simplot" class="plotbox"></div>';
     D.$('#ep_simres').innerHTML = html;
     GC.plot.diagram(D.$('#ep_simplot'), GC.rainwater.courbeCouverture(base, Math.max(10, D.num('ep_vcuve') * 2)),
       { yKey: 'y', color: '#e08a1e', fill: 'rgba(224,138,30,0.12)', title: 'Taux de couverture selon le volume de cuve', unit: '%' });
+  }
+
+  function importerCSV(e) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      serieImportee = GC.rainwater.parseChronique(reader.result);
+      const total = Math.round(serieImportee.reduce((a, b) => a + b, 0));
+      const msg = D.$('#ep_csvmsg');
+      if (msg) msg.textContent = serieImportee.length
+        ? `${serieImportee.length} jours importés (total ${total} mm). Cliquez « Simuler la chronique ».`
+        : 'Aucune valeur numérique détectée dans le fichier.';
+    };
+    reader.readAsText(f);
+  }
+
+  function ressaut() {
+    const r = GC.channel.ressaut({ b: D.num('ca_b'), Q: D.num('ca_Qres'), y1: D.num('ca_y1') });
+    let html = `<div class="result-head"><span class="badge ${r.Fr1 >= 1 ? 'badge-ok' : 'badge-warn'}">${r.type}</span><h4>Ressaut hydraulique</h4></div>`;
+    html += D.table(['Grandeur', 'Valeur', 'Unité'], [
+      ['Tirant amont y₁ (torrentiel)', D.fmt(r.y1, 3), 'm'],
+      ['Vitesse / Froude amont', D.fmt(r.V1, 2) + ' m/s · Fr₁=' + D.fmt(r.Fr1, 2), '—'],
+      ['<b>Tirant aval y₂ (conjugué)</b>', '<b>' + D.fmt(r.y2, 3) + '</b>', 'm'],
+      ['Froude aval Fr₂', D.fmt(r.Fr2, 2), '—'],
+      ['Perte d’énergie ΔE', D.fmt(r.deltaE, 3), 'm'],
+      ['Longueur du ressaut', D.fmt(r.longueur, 2), 'm']
+    ]);
+    if (r.messages.length) html += '<ul class="notes">' + r.messages.map((m) => `<li>${m}</li>`).join('') + '</ul>';
+    D.$('#ca_ressres').innerHTML = html;
   }
 
   function remous() {
@@ -197,10 +231,14 @@
       });
     }
     D.$('#ba_calc').addEventListener('click', bassin);
-    D.$('#ep_sim').addEventListener('click', recupSim);
+    D.$('#ep_sim').addEventListener('click', () => recupSim());
     D.$('#ca_remous').addEventListener('click', remous);
+    D.$('#ca_ressaut').addEventListener('click', ressaut);
+    const csv = D.$('#ep_csv');
+    if (csv) csv.addEventListener('change', importerCSV);
+    D.$('#ep_simcsv').addEventListener('click', () => recupSim(serieImportee));
     pluvial(); canal(); terr(); chaussee(); caniveau(); recupEP();
-    bassin(); recupSim(); remous();
+    bassin(); recupSim(); remous(); ressaut();
   }
 
   GC.modules = GC.modules || {};

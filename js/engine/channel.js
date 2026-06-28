@@ -159,5 +159,38 @@
     };
   }
 
-  return { geometrie, capacite, dimensionner, profondeurNormale, profondeurCritique, courbeRemous };
+  /**
+   * Ressaut hydraulique en canal rectangulaire (profondeurs conjuguées).
+   * @param {object} p {b (m), Q (m³/s), y1 (tirant amont torrentiel, m)}
+   */
+  function ressaut(p) {
+    const b = p.b, Q = p.Q, y1 = p.y1;
+    const V1 = Q / (b * y1);
+    const Fr1 = V1 / Math.sqrt(G * y1);
+    const y2 = y1 / 2 * (Math.sqrt(1 + 8 * Fr1 * Fr1) - 1);
+    const V2 = Q / (b * y2);
+    const Fr2 = V2 / Math.sqrt(G * y2);
+    const deltaE = Math.pow(y2 - y1, 3) / (4 * y1 * y2);
+    const E1 = y1 + V1 * V1 / (2 * G);
+    const longueur = 6 * y2;
+    let type;
+    if (Fr1 < 1) type = 'écoulement fluvial (pas de ressaut)';
+    else if (Fr1 < 1.7) type = 'ressaut ondulé';
+    else if (Fr1 < 2.5) type = 'ressaut faible';
+    else if (Fr1 < 4.5) type = 'ressaut oscillant';
+    else if (Fr1 < 9) type = 'ressaut stable';
+    else type = 'ressaut fort';
+    return {
+      y1: round(y1, 3), y2: round(y2, 3),
+      V1: round(V1, 2), V2: round(V2, 2),
+      Fr1: round(Fr1, 2), Fr2: round(Fr2, 2),
+      deltaE: round(deltaE, 3),
+      rendement: round((1 - deltaE / E1) * 100, 0),
+      longueur: round(longueur, 2),
+      type,
+      messages: Fr1 < 1 ? ['Fr₁ < 1 : l’écoulement amont est fluvial, aucun ressaut ne se forme.'] : []
+    };
+  }
+
+  return { geometrie, capacite, dimensionner, profondeurNormale, profondeurCritique, courbeRemous, ressaut };
 });

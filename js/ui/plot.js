@@ -210,5 +210,60 @@
     container.appendChild(s);
   }
 
-  GC.plot = { diagram, beamSchematic, interaction, courbes };
+  /** Profil en long d'un réseau gravitaire (terrain, fil d'eau, tuyau, regards). */
+  function profilLong(container, noeuds) {
+    container.innerHTML = '';
+    const W = 820, H = 360, mL = 58, mR = 16, mT = 24, mB = 64;
+    const s = svg(W, H);
+    const PMs = noeuds.map((n) => n.PM);
+    const pmMin = Math.min.apply(null, PMs), pmMax = Math.max.apply(null, PMs);
+    let cMin = Infinity, cMax = -Infinity;
+    noeuds.forEach((n) => { cMin = Math.min(cMin, n.fondFouille); cMax = Math.max(cMax, n.TN); });
+    const pad = (cMax - cMin) * 0.12 || 1;
+    cMin -= pad; cMax += pad;
+    const px = (pm) => mL + (pm - pmMin) / (pmMax - pmMin || 1) * (W - mL - mR);
+    const py = (c) => (H - mB) - (c - cMin) / (cMax - cMin || 1) * (H - mT - mB);
+
+    s.appendChild(node('rect', { x: mL, y: mT, width: W - mL - mR, height: H - mT - mB, fill: '#fff', stroke: '#e1e6ee' }));
+
+    // bande de tuyau (fil d'eau → génératrice supérieure)
+    for (let k = 0; k < noeuds.length - 1; k++) {
+      const a = noeuds[k], b = noeuds[k + 1];
+      const poly = `${px(a.PM)},${py(a.crown)} ${px(b.PM)},${py(b.crown)} ${px(b.PM)},${py(b.filEau)} ${px(a.PM)},${py(a.filEau)}`;
+      s.appendChild(node('polygon', { points: poly, fill: 'rgba(27,58,91,0.18)', stroke: '#1b3a5b', 'stroke-width': 1 }));
+    }
+    // regards (TN → fond de fouille)
+    noeuds.forEach((n) => {
+      s.appendChild(node('rect', { x: px(n.PM) - 4, y: py(n.TN), width: 8, height: py(n.fondFouille) - py(n.TN), fill: '#cfd8e6', stroke: '#8aa0bd' }));
+    });
+    // terrain naturel
+    let dTN = '';
+    noeuds.forEach((n, i) => { dTN += (i === 0 ? 'M' : 'L') + px(n.PM) + ' ' + py(n.TN); });
+    s.appendChild(node('path', { d: dTN, fill: 'none', stroke: '#9c6b2f', 'stroke-width': 2 }));
+    // fond de fouille (pointillé)
+    let dF = '';
+    noeuds.forEach((n, i) => { dF += (i === 0 ? 'M' : 'L') + px(n.PM) + ' ' + py(n.fondFouille); });
+    s.appendChild(node('path', { d: dF, fill: 'none', stroke: '#b0392b', 'stroke-width': 1, 'stroke-dasharray': '4 3' }));
+
+    // étiquettes des regards
+    noeuds.forEach((n) => {
+      s.appendChild(text(px(n.PM), py(n.TN) - 6, n.nom, { 'font-size': 10, fill: '#11203a', 'text-anchor': 'middle', 'font-weight': 700 }));
+      s.appendChild(text(px(n.PM), H - mB + 14, 'PM ' + GC.dom.fmt(n.PM, 0), { 'font-size': 9, fill: '#5a6678', 'text-anchor': 'middle' }));
+      s.appendChild(text(px(n.PM), H - mB + 26, 'FE ' + GC.dom.fmt(n.filEau, 2), { 'font-size': 9, fill: '#1b3a5b', 'text-anchor': 'middle' }));
+      s.appendChild(text(px(n.PM), H - mB + 38, 'TN ' + GC.dom.fmt(n.TN, 2), { 'font-size': 9, fill: '#9c6b2f', 'text-anchor': 'middle' }));
+    });
+    // graduations cote
+    [cMax, (cMax + cMin) / 2, cMin].forEach((cv) => {
+      s.appendChild(text(mL - 6, py(cv) + 3, GC.dom.fmt(cv, 1), { 'font-size': 9, fill: '#5a6678', 'text-anchor': 'end' }));
+    });
+    // légende
+    const leg = [['Terrain', '#9c6b2f'], ['Fil d’eau / tuyau', '#1b3a5b'], ['Fond de fouille', '#b0392b']];
+    leg.forEach((l, i) => {
+      s.appendChild(node('line', { x1: mL + 6 + i * 150, y1: 14, x2: mL + 24 + i * 150, y2: 14, stroke: l[1], 'stroke-width': 3 }));
+      s.appendChild(text(mL + 28 + i * 150, 18, l[0], { 'font-size': 10, fill: '#34425a' }));
+    });
+    container.appendChild(s);
+  }
+
+  GC.plot = { diagram, beamSchematic, interaction, courbes, profilLong };
 })();

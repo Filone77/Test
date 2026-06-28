@@ -25,6 +25,7 @@ const channel = require('../js/engine/channel.js');
 const rainwater = require('../js/engine/rainwater.js');
 const earthwork = require('../js/engine/earthwork.js');
 const detention = require('../js/engine/detention.js');
+const network = require('../js/engine/network.js');
 
 let passed = 0, failed = 0;
 function check(label, got, expected, tol) {
@@ -298,6 +299,33 @@ check('Profondeur normale (b=1, Q=1, I=0.001, K=50) [m]', channel.profondeurNorm
 const rem = channel.courbeRemous({ forme: 'rectangulaire', b: 1, Q: 1, I: 0.001, K: 50, yAval: 1.6, L: 2000 });
 checkBool('profil M1 (yAval > yn > yc)', rem.type === 'M1', true);
 checkBool('profil de remous calculé', rem.profil.length > 5, true);
+
+console.log('\n=== RESSAUT HYDRAULIQUE ===');
+const rs = channel.ressaut({ b: 0.5, Q: 0.5, y1: 0.15 });
+check('Nombre de Froude amont Fr1', rs.Fr1, 5.5, 0.03);
+check('Profondeur conjuguée y2 [m]', rs.y2, 1.094, 0.03);
+check('Perte d’énergie ΔE [m]', rs.deltaE, 1.281, 0.04);
+checkBool('type = ressaut stable', rs.type === 'ressaut stable', true);
+
+console.log('\n=== RÉSEAU GRAVITAIRE — PROFIL EN LONG ===');
+const net = network.profil({
+  noeuds: [{ nom: 'R1', PM: 0, TN: 100.0 }, { nom: 'R2', PM: 50, TN: 99.5 }, { nom: 'R3', PM: 100, TN: 99.2 }],
+  troncons: [{ DN: 300, DE: 345, K: 80, Q: 30, pente: 0.005 }, { DN: 300, DE: 345, K: 80, Q: 40, pente: 0.004 }],
+  filEauDepart: 98.5, eLit: 0.10
+});
+check('Fil d’eau au R3 [m]', net.noeuds[2].filEau, 98.05, 0.001);
+check('Couverture au R1 [m]', net.noeuds[0].couverture, 1.16, 0.02);
+check('Vitesse tronçon 1 [m/s]', net.troncons[0].V, 0.96, 0.08);
+checkBool('remplissage tronçon 1 < 60 %', net.troncons[0].remplissage < 60, true);
+
+console.log('\n=== BÂCHE EP — CHRONIQUE IMPORTÉE ===');
+const csv = 'date;pluie_mm\n2020-01-01;5.2\n2020-01-02;0\n2020-01-03;12,4';
+const serie = rainwater.parseChronique(csv);
+check('Chronique parsée : nb jours', serie.length, 3, 0);
+check('Chronique parsée : total [mm]', serie.reduce((a, b) => a + b, 0), 17.6, 0.01);
+const serieUnif = new Array(365).fill(2); // 2 mm/j
+const simS = rainwater.simulation({ surface: 100, Crunoff: 0.9, etaFiltre: 0.9, demandeJour: 200, Vcuve: 500, serie: serieUnif });
+check('Simulation série : couverture [%]', simS.tauxCouverture, 81, 0.03);
 
 console.log(`\n===========================================`);
 console.log(`Résultat : ${passed} réussis, ${failed} échoués`);
