@@ -26,6 +26,7 @@ const rainwater = require('../js/engine/rainwater.js');
 const earthwork = require('../js/engine/earthwork.js');
 const detention = require('../js/engine/detention.js');
 const network = require('../js/engine/network.js');
+const road = require('../js/engine/road.js');
 
 let passed = 0, failed = 0;
 function check(label, got, expected, tol) {
@@ -326,6 +327,43 @@ check('Chronique parsée : total [mm]', serie.reduce((a, b) => a + b, 0), 17.6, 
 const serieUnif = new Array(365).fill(2); // 2 mm/j
 const simS = rainwater.simulation({ surface: 100, Crunoff: 0.9, etaFiltre: 0.9, demandeJour: 200, Vcuve: 500, serie: serieUnif });
 check('Simulation série : couverture [%]', simS.tauxCouverture, 81, 0.03);
+
+console.log('Agrégation sub-journalière (6 min → jour)');
+const serie6 = new Array(480).fill(0.1); // 2 jours à pas de 6 min
+const agg = rainwater.agregerJournalier(serie6, 6);
+check('Nb jours agrégés', agg.length, 2, 0);
+check('Pluie journalière agrégée [mm]', agg[0], 24, 0.01);
+
+console.log('\n=== DIMENSIONNEMENT VOIRIE ===');
+const rd = road.dimensionner({ MJA: 100, taux: 0.02, annees: 20, CAM: 1.0, module: 100 });
+check('Trafic cumulé NPL', rd.NPL, 886858, 0.01);
+check('Essieux équivalents NE', rd.NE, 886858, 0.01);
+check('Déformation admissible εz [μdef]', rd.epsZadm, 574, 0.03);
+checkBool('classe de trafic T3', rd.classeTrafic === 'T3', true);
+checkBool('plateforme PF2qs', rd.classePlateforme === 'PF2qs', true);
+
+console.log('\n=== RÉSEAU — OPTIMISATION FIL D’EAU (chutes) ===');
+const opt = network.optimiser({
+  noeuds: [{ nom: 'R1', PM: 0, TN: 100 }, { nom: 'R2', PM: 50, TN: 99 }, { nom: 'R3', PM: 100, TN: 96 }],
+  troncons: [{ DN: 300, DE: 345 }, { DN: 300, DE: 345 }],
+  couvertureMin: 0.8, penteMin: 0.003, penteMax: 0.05
+});
+check('Chute au regard R3 [m]', opt.chutes[2], 0.5, 0.05);
+checkBool('au moins un décrochement', opt.nbChutes >= 1, true);
+
+console.log('\n=== RÉSEAU — MISE EN CHARGE ===');
+const charge = network.ligneCharge({
+  noeuds: [{ nom: 'A', PM: 0, TN: 100 }, { nom: 'B', PM: 100, TN: 99.6 }],
+  troncons: [{ DN: 300, DE: 345, K: 80, Q: 150, pente: 0.004 }],
+  filEauDepart: 98.0
+}, 98.0);
+checkBool('mise en charge détectée (Q=150 > capacité)', charge.miseEnCharge, true);
+
+console.log('\n=== RESSAUT LOCALISÉ ===');
+const rl = channel.ressautLocalise({ b: 1, Q: 2, I: 0.006, K: 50, yAmont: 0.35, yAval: 0.9, L: 80 });
+checkBool('ressaut présent', rl.ressautPresent, true);
+checkBool('y1 < yc < y2', rl.y1 < rl.yc && rl.y2 > rl.yc, true);
+check('position du ressaut [m]', rl.position, 12, 0.3);
 
 console.log(`\n===========================================`);
 console.log(`Résultat : ${passed} réussis, ${failed} échoués`);

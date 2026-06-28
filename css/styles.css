@@ -54,7 +54,9 @@ body {
 }
 .brand .tagline { font-size: 0.78rem; color: #8ea4c0; margin-top: 4px; }
 
-.nav { padding: 12px 10px; flex: 1; }
+.nav { padding: 12px 10px; flex: 1; overflow-y: auto; }
+.nav::-webkit-scrollbar { width: 7px; }
+.nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 4px; }
 .nav-item {
   display: flex; align-items: center; gap: 11px;
   padding: 11px 14px; margin: 2px 0; border-radius: 9px;

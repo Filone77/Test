@@ -27,6 +27,7 @@
       <div class="nav-item" data-view="metre"><span class="ico">∑</span> Métré &amp; Fondations</div>
       <div class="nav-item" data-view="vrd"><span class="ico">⌳</span> VRD</div>
       <div class="nav-item" data-view="reseau"><span class="ico">⛆</span> Réseau / Profil en long</div>
+      <div class="nav-item" data-view="voirie"><span class="ico">▭</span> Voirie / Chaussée</div>
       <div class="nav-item" data-view="conduite"><span class="ico">⊚</span> Conduite sous pression</div>
       <div class="nav-item" data-view="pompage"><span class="ico">⏿</span> Station de pompage</div>
       <div class="nav-item" data-view="deversoirs"><span class="ico">⫰</span> Déversoirs</div>
@@ -141,6 +142,11 @@
             <div class="mc-ico">⛆</div><h3>Réseau / Profil en long</h3>
             <p>Cotes des regards (TN, fil d'eau, fond de fouille), écoulement partiel, profil.</p>
             <span class="mc-tag">Gravitaire</span>
+          </div>
+          <div class="module-card" data-goto="voirie">
+            <div class="mc-ico">▭</div><h3>Voirie / Chaussée</h3>
+            <p>Trafic cumulé, classes TC/PF, déformations admissibles, structure.</p>
+            <span class="mc-tag">NF P98-086</span>
           </div>
         </div>
       </section>
@@ -701,6 +707,22 @@
             </div>
             <div class="result" id="ca_ressres"></div>
           </div>
+          <div class="grid2" style="margin-top:18px">
+            <div class="card">
+              <h3>Ressaut localisé sur le profil</h3>
+              <p class="desc">Position du ressaut entre un écoulement amont torrentiel et un contrôle aval fluvial (largeur b ci-dessus).</p>
+              <div class="form-grid">
+                <div class="field"><label>Débit Q [m³/s]</label><input id="ca_Qrl" type="number" value="2" step="0.1" /></div>
+                <div class="field"><label>Pente I [m/m]</label><input id="ca_Irl" type="number" value="0.006" step="0.001" /></div>
+                <div class="field"><label>Tirant amont y₁ [m]</label><input id="ca_yam" type="number" value="0.35" step="0.01" /></div>
+                <div class="field"><label>Tirant aval (contrôle) [m]</label><input id="ca_yav" type="number" value="0.9" step="0.01" /></div>
+                <div class="field"><label>Longueur étudiée [m]</label><input id="ca_Lrl" type="number" value="80" /></div>
+              </div>
+              <div class="btn-row"><button class="btn" id="ca_rlcalc">Localiser le ressaut</button>
+                <button class="btn ghost" data-export-title="VRD — Ressaut localisé" data-export-res="ca_rlres">📄 Note PDF</button></div>
+            </div>
+            <div class="result" id="ca_rlres"></div>
+          </div>
         </div>
 
         <div class="subpanel" data-subpanel="vrd" data-panel="recupEP">
@@ -731,7 +753,8 @@
               <div class="btn-row"><button class="btn ambre" id="ep_sim">▶ Simuler 365 jours</button>
                 <button class="btn ghost" data-export-title="VRD — Simulation récupération EP" data-export-res="ep_simres">📄 Note PDF</button></div>
               <div class="subform-label">Chronique de pluie réelle (CSV)</div>
-              <p class="muted" style="margin:0 0 6px">Fichier texte : une valeur de pluie [mm] par ligne (ou « date ; valeur »).</p>
+              <p class="muted" style="margin:0 0 6px">Fichier texte : une valeur de pluie [mm] par ligne (ou « date ; valeur »). Indiquez le pas de temps pour agréger en journalier.</p>
+              <div class="form-grid" style="max-width:240px"><div class="field"><label>Pas de temps [min] (0 = journalier)</label><input id="ep_pas" type="number" value="0" /></div></div>
               <input id="ep_csv" type="file" accept=".csv,.txt" style="font-size:0.85rem" />
               <div class="rowline" style="margin-top:8px"><button class="btn ghost" id="ep_simcsv">Simuler la chronique importée</button>
                 <span id="ep_csvmsg" class="muted" style="font-size:0.78rem"></span></div>
@@ -827,16 +850,43 @@
         <p class="section-sub">Cotes par regard (terrain, fil d'eau, génératrice supérieure, fond de fouille) et écoulement à surface libre (taux de remplissage, autocurage). Saisissez les regards de l'amont vers l'aval ; les colonnes DN/DE/Q/pente concernent le tronçon partant du regard.</p>
         <div class="card">
           <h3>Regards &amp; tronçons</h3>
-          <div class="form-grid" style="max-width:480px">
+          <div class="form-grid" style="max-width:720px">
             <div class="field"><label>Cote fil d'eau de départ [m]</label><input id="nw_fileau" type="number" value="98.5" step="0.01" /></div>
             <div class="field"><label>Lit de pose [m]</label><input id="nw_elit" type="number" value="0.10" step="0.01" /></div>
+            <div class="field"><label>Niveau aval (mise en charge) [m]</label><input id="nw_aval" type="number" placeholder="auto" step="0.01" /></div>
           </div>
           <div id="nw_regards" style="margin-top:12px;overflow-x:auto"></div>
           <button class="add-btn" id="nw_add">+ Ajouter un regard</button>
           <div class="btn-row"><button class="btn ambre" id="nw_calc">▶ Calculer le profil</button>
+            <button class="btn" id="nw_optim">⚙ Optimiser le fil d'eau</button>
+            <button class="btn ghost" id="nw_charge">≈ Mise en charge</button>
             <button class="btn ghost" data-export-title="Réseau — Profil en long" data-export-res="nw_res">📄 Note PDF</button></div>
         </div>
         <div class="result" id="nw_res"></div>
+      </section>
+
+      <!-- ---------- VOIRIE / CHAUSSÉE ---------- -->
+      <section class="view" id="view-voirie">
+        <h2 class="section-title">Dimensionnement de voirie</h2>
+        <p class="section-sub">Méthode rationnelle française (NF P98-086) : trafic cumulé, classes de trafic et de plateforme, déformations admissibles et structure indicative.</p>
+        <div class="grid2">
+          <div class="card">
+            <h3>Données du projet</h3>
+            <div class="form-grid">
+              <div class="field"><label>Trafic PL/jour (MJA)</label><input id="rv_MJA" type="number" value="100" /></div>
+              <div class="field"><label>Taux de croissance</label><input id="rv_taux" type="number" value="0.02" step="0.005" /></div>
+              <div class="field"><label>Durée de calcul [ans]</label><input id="rv_annees" type="number" value="20" /></div>
+              <div class="field"><label>Coeff. agressivité CAM</label><input id="rv_CAM" type="number" value="0.8" step="0.1" /></div>
+              <div class="field"><label>Module plateforme [MPa]</label><input id="rv_module" type="number" value="100" /></div>
+              <div class="field"><label>ε₆ matériau [μdef]</label><input id="rv_e6" type="number" value="100" /></div>
+              <div class="field"><label>Pente fatigue b</label><input id="rv_b" type="number" value="-0.2" step="0.01" /></div>
+              <div class="field"><label>Coefficient kc</label><input id="rv_kc" type="number" value="1.3" step="0.1" /></div>
+            </div>
+            <div class="btn-row"><button class="btn" id="rv_calc">Calculer</button>
+              <button class="btn ghost" data-export-title="Voirie — dimensionnement" data-export-res="rv_res">📄 Note PDF</button></div>
+          </div>
+          <div class="result" id="rv_res"></div>
+        </div>
       </section>
 
       <!-- ---------- CONDUITE SOUS PRESSION ---------- -->
@@ -1164,6 +1214,7 @@
 <script src="js/engine/earthwork.js"></script>
 <script src="js/engine/detention.js"></script>
 <script src="js/engine/network.js"></script>
+<script src="js/engine/road.js"></script>
 <script src="js/engine/validator.js"></script>
 <!-- Interface -->
 <script src="js/ui/dom.js"></script>
@@ -1185,6 +1236,7 @@
 <script src="js/ui/sludge.ui.js"></script>
 <script src="js/ui/distribution.ui.js"></script>
 <script src="js/ui/network.ui.js"></script>
+<script src="js/ui/road.ui.js"></script>
 <script src="js/ui/validator.ui.js"></script>
 <script src="js/ui/app.js"></script>
 </body>

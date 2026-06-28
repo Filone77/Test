@@ -174,5 +174,18 @@
     return out;
   }
 
-  return { CUVES, TOITURES, PROFIL_MENSUEL, dimensionner, chroniqueJournaliere, simulerReservoir, simulation, courbeCouverture, parseChronique };
+  /** Agrège une chronique à pas fin (ex. 6 min) en totaux journaliers [mm/j]. */
+  function agregerJournalier(serie, pasMinutes) {
+    const nParJour = Math.max(1, Math.round(1440 / pasMinutes));
+    if (nParJour <= 1) return serie.slice();
+    const out = [];
+    for (let i = 0; i < serie.length; i += nParJour) {
+      let s = 0;
+      for (let j = i; j < Math.min(i + nParJour, serie.length); j++) s += serie[j];
+      out.push(round(s, 2));
+    }
+    return out;
+  }
+
+  return { CUVES, TOITURES, PROFIL_MENSUEL, dimensionner, chroniqueJournaliere, simulerReservoir, simulation, courbeCouverture, parseChronique, agregerJournalier };
 });

@@ -211,31 +211,50 @@
   }
 
   /** Profil en long d'un réseau gravitaire (terrain, fil d'eau, tuyau, regards). */
-  function profilLong(container, noeuds) {
+  function profilLong(container, noeuds, opt) {
     container.innerHTML = '';
+    opt = opt || {};
     const W = 820, H = 360, mL = 58, mR = 16, mT = 24, mB = 64;
     const s = svg(W, H);
     const PMs = noeuds.map((n) => n.PM);
     const pmMin = Math.min.apply(null, PMs), pmMax = Math.max.apply(null, PMs);
     let cMin = Infinity, cMax = -Infinity;
     noeuds.forEach((n) => { cMin = Math.min(cMin, n.fondFouille); cMax = Math.max(cMax, n.TN); });
+    if (opt.hgl) opt.hgl.forEach((h) => { cMax = Math.max(cMax, h.HGL); });
     const pad = (cMax - cMin) * 0.12 || 1;
     cMin -= pad; cMax += pad;
     const px = (pm) => mL + (pm - pmMin) / (pmMax - pmMin || 1) * (W - mL - mR);
     const py = (c) => (H - mB) - (c - cMin) / (cMax - cMin || 1) * (H - mT - mB);
+    const fa = (n) => n.filEauAval != null ? n.filEauAval : n.filEau;
+    const fm = (n) => n.filEauAmont != null ? n.filEauAmont : n.filEau;
+    const ca = (n) => n.crownAval != null ? n.crownAval : n.crown;
+    const cm = (n) => n.crownAmont != null ? n.crownAmont : n.crown;
 
     s.appendChild(node('rect', { x: mL, y: mT, width: W - mL - mR, height: H - mT - mB, fill: '#fff', stroke: '#e1e6ee' }));
 
-    // bande de tuyau (fil d'eau → génératrice supérieure)
+    // bande de tuyau (fil d'eau → génératrice supérieure), avec chutes éventuelles
     for (let k = 0; k < noeuds.length - 1; k++) {
       const a = noeuds[k], b = noeuds[k + 1];
-      const poly = `${px(a.PM)},${py(a.crown)} ${px(b.PM)},${py(b.crown)} ${px(b.PM)},${py(b.filEau)} ${px(a.PM)},${py(a.filEau)}`;
+      const poly = `${px(a.PM)},${py(ca(a))} ${px(b.PM)},${py(cm(b))} ${px(b.PM)},${py(fm(b))} ${px(a.PM)},${py(fa(a))}`;
       s.appendChild(node('polygon', { points: poly, fill: 'rgba(27,58,91,0.18)', stroke: '#1b3a5b', 'stroke-width': 1 }));
     }
+    // décrochements (chutes) dans les regards
+    noeuds.forEach((n) => {
+      if (n.chute > 0.001) {
+        s.appendChild(node('line', { x1: px(n.PM), y1: py(fm(n)), x2: px(n.PM), y2: py(fa(n)), stroke: '#c0392b', 'stroke-width': 2.5 }));
+        s.appendChild(text(px(n.PM) + 6, (py(fm(n)) + py(fa(n))) / 2, '▼' + GC.dom.fmt(n.chute, 2), { 'font-size': 9, fill: '#c0392b' }));
+      }
+    });
     // regards (TN → fond de fouille)
     noeuds.forEach((n) => {
       s.appendChild(node('rect', { x: px(n.PM) - 4, y: py(n.TN), width: 8, height: py(n.fondFouille) - py(n.TN), fill: '#cfd8e6', stroke: '#8aa0bd' }));
     });
+    // ligne piézométrique (mise en charge)
+    if (opt.hgl) {
+      let dH = '';
+      opt.hgl.forEach((h, i) => { dH += (i === 0 ? 'M' : 'L') + px(h.PM) + ' ' + py(h.HGL); });
+      s.appendChild(node('path', { d: dH, fill: 'none', stroke: '#2e7d32', 'stroke-width': 1.8, 'stroke-dasharray': '6 3' }));
+    }
     // terrain naturel
     let dTN = '';
     noeuds.forEach((n, i) => { dTN += (i === 0 ? 'M' : 'L') + px(n.PM) + ' ' + py(n.TN); });

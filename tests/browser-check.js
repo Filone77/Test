@@ -145,7 +145,8 @@ const path = require('path');
   await page.screenshot({ path: path.join(outDir, 'apercu-bassin.png'), fullPage: true });
   await page.click('[data-subtab="vrd"][data-tab="caniveau"]'); await page.waitForTimeout(120); await page.click('#ca_remous'); await page.click('#ca_ressaut'); await page.waitForTimeout(200);
   await page.screenshot({ path: path.join(outDir, 'apercu-remous.png'), fullPage: true });
-  await snap('reseau', 'apercu-reseau.png', async () => { await page.click('#nw_calc'); });
+  await snap('reseau', 'apercu-reseau.png', async () => { await page.click('#nw_calc'); await page.click('#nw_charge'); });
+  await snap('voirie', 'apercu-voirie.png', async () => { await page.click('#rv_calc'); });
   await page.click('.nav-item[data-view="pompage"]'); await page.click('[data-subtab="pompage"][data-tab="pf"]'); await page.waitForTimeout(120); await page.click('#pf_calc'); await page.waitForTimeout(150);
   checks.pf = await page.textContent('#pf_res');
   const pfSvg = await page.$$eval('#pf_res svg', (els) => els.length);
@@ -167,10 +168,19 @@ const path = require('path');
   checks.remous = await page.textContent('#ca_remres');
   await page.click('#ca_ressaut'); await page.waitForTimeout(120);
   checks.ressaut = await page.textContent('#ca_ressres');
+  await page.click('#ca_rlcalc'); await page.waitForTimeout(150);
+  checks.ressautLoc = await page.textContent('#ca_rlres');
   // Réseau gravitaire — profil en long
   await page.click('.nav-item[data-view="reseau"]'); await page.click('#nw_calc'); await page.waitForTimeout(150);
   checks.reseau = await page.textContent('#nw_res');
   const nwSvg = await page.$$eval('#nw_res svg', (els) => els.length);
+  await page.click('#nw_charge'); await page.waitForTimeout(150);
+  checks.charge = await page.textContent('#nw_res');
+  await page.click('#nw_optim'); await page.waitForTimeout(150);
+  checks.optim = await page.textContent('#nw_res');
+  // Voirie
+  await page.click('.nav-item[data-view="voirie"]'); await page.click('#rv_calc'); await page.waitForTimeout(150);
+  checks.voirie = await page.textContent('#rv_res');
   // Note de calcul (générateur PDF) — test de la fonction de construction
   checks.report = await page.evaluate(() =>
     GC.report.build('Test', [['a', 'b']], '<p>résultat</p>').indexOf('Note de calcul') >= 0);
@@ -221,6 +231,10 @@ const path = require('path');
   ok &= has('Réseau / profil', checks.reseau, 'Fil d’eau');
   console.log(`  ${nwSvg >= 1 ? '✓' : '✗'} Réseau : ${nwSvg} profil SVG`);
   ok &= nwSvg >= 1;
+  ok &= has('Ressaut localisé', checks.ressautLoc, 'critique');
+  ok &= has('Mise en charge', checks.charge, 'piézo');
+  ok &= has('Optimisation fil d’eau', checks.optim, 'Cotes');
+  ok &= has('Voirie', checks.voirie, 'admissible');
 
   console.log('\n--- Erreurs JS détectées ---');
   if (errors.length === 0) console.log('  ✓ Aucune erreur console / page');

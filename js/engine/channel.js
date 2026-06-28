@@ -192,5 +192,61 @@
     };
   }
 
-  return { geometrie, capacite, dimensionner, profondeurNormale, profondeurCritique, courbeRemous, ressaut };
+  /**
+   * Ressaut localisé sur un canal rectangulaire : intersection du profil
+   * supercritique (depuis l'amont) avec la conjuguée du profil subcritique
+   * (depuis l'aval). Renvoie la position et les profondeurs du ressaut.
+   * @param {object} p {b, Q, I, K, yAmont (torrentiel), yAval (fluvial), L}
+   */
+  function ressautLocalise(p) {
+    const b = p.b, Q = p.Q, L = p.L || 100, n = 200, dx = L / n;
+    const yc = profondeurCritique({ forme: 'rectangulaire', b, Q });
+    const yn = profondeurNormale({ forme: 'rectangulaire', b, Q, I: p.I, K: p.K });
+    const Sf = (y) => {
+      const g = geometrie('rectangulaire', b, y);
+      return Math.pow((Q / g.A) / (p.K * Math.pow(g.Rh, 2 / 3)), 2);
+    };
+    const Fr2 = (y) => Q * Q * b / (G * Math.pow(b * y, 3));
+    const dydx = (y) => (p.I - Sf(y)) / (1 - Fr2(y));
+
+    // profil supercritique depuis l'amont (x=0)
+    const sup = new Array(n + 1); sup[0] = p.yAmont; let yy = p.yAmont;
+    for (let i = 1; i <= n; i++) {
+      const d = dydx(yy); yy += d * dx;
+      if (yy >= yc) yy = yc * 0.999; // ne pas franchir le critique
+      sup[i] = yy;
+    }
+    // profil subcritique depuis l'aval (x=L)
+    const sub = new Array(n + 1); sub[n] = p.yAval; yy = p.yAval;
+    for (let i = n - 1; i >= 0; i--) {
+      const d = dydx(yy); yy -= d * dx;
+      if (yy <= yc) yy = yc * 1.001;
+      sub[i] = yy;
+    }
+    // conjuguée du profil supercritique et recherche du croisement avec sub
+    let jumpX = null, y1 = null, y2 = null;
+    let prev = null;
+    for (let i = 0; i <= n; i++) {
+      const Fr = Math.sqrt(Fr2(sup[i]));
+      const conj = sup[i] / 2 * (Math.sqrt(1 + 8 * Fr * Fr) - 1);
+      const diff = conj - sub[i];
+      if (prev != null && prev * diff <= 0) {
+        jumpX = round(i * dx, 1); y1 = round(sup[i], 3); y2 = round(sub[i], 3);
+        break;
+      }
+      prev = diff;
+    }
+    return {
+      yc: round(yc, 3), yn: round(yn, 3),
+      ressautPresent: jumpX != null,
+      position: jumpX, y1, y2,
+      profilSup: sup.map((y, i) => ({ x: round(i * dx, 1), y: round(y, 3) })),
+      profilSub: sub.map((y, i) => ({ x: round(i * dx, 1), y: round(y, 3) })),
+      messages: jumpX != null
+        ? [`Ressaut localisé à ${jumpX} m de l'amont (y₁=${y1} m → y₂=${y2} m).`]
+        : ['Pas de ressaut dans la longueur étudiée (profils ne se croisent pas).']
+    };
+  }
+
+  return { geometrie, capacite, dimensionner, profondeurNormale, profondeurCritique, courbeRemous, ressaut, ressautLocalise };
 });

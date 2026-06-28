@@ -110,14 +110,44 @@
     if (!f) return;
     const reader = new FileReader();
     reader.onload = () => {
-      serieImportee = GC.rainwater.parseChronique(reader.result);
+      let serie = GC.rainwater.parseChronique(reader.result);
+      const pas = D.num('ep_pas');
+      let note = '';
+      if (pas > 0 && pas < 1440) {
+        const avant = serie.length;
+        serie = GC.rainwater.agregerJournalier(serie, pas);
+        note = ` (${avant} pas de ${pas} min agrégés en ${serie.length} jours)`;
+      }
+      serieImportee = serie;
       const total = Math.round(serieImportee.reduce((a, b) => a + b, 0));
       const msg = D.$('#ep_csvmsg');
       if (msg) msg.textContent = serieImportee.length
-        ? `${serieImportee.length} jours importés (total ${total} mm). Cliquez « Simuler la chronique ».`
+        ? `${serieImportee.length} jours, total ${total} mm${note}. Cliquez « Simuler la chronique ».`
         : 'Aucune valeur numérique détectée dans le fichier.';
     };
     reader.readAsText(f);
+  }
+
+  function ressautLoc() {
+    const r = GC.channel.ressautLocalise({
+      b: D.num('ca_b'), Q: D.num('ca_Qrl'), I: D.num('ca_Irl'), K: D.num('ca_K'),
+      yAmont: D.num('ca_yam'), yAval: D.num('ca_yav'), L: D.num('ca_Lrl')
+    });
+    let html = `<div class="result-head"><span class="badge ${r.ressautPresent ? 'badge-ok' : 'badge-warn'}">${r.ressautPresent ? 'Ressaut localisé' : 'Pas de ressaut'}</span><h4>Ressaut sur le profil</h4></div>`;
+    html += D.table(['Grandeur', 'Valeur', 'Unité'], [
+      ['Profondeur critique yc', D.fmt(r.yc, 3), 'm'],
+      ['Profondeur normale yn', D.fmt(r.yn, 3), 'm'],
+      ['Position du ressaut', r.position != null ? D.fmt(r.position, 1) : '—', 'm'],
+      ['Profondeur amont y₁', r.y1 != null ? D.fmt(r.y1, 3) : '—', 'm'],
+      ['Profondeur aval y₂', r.y2 != null ? D.fmt(r.y2, 3) : '—', 'm']
+    ]);
+    html += '<div id="ca_rlplot" class="plotbox"></div>';
+    if (r.messages.length) html += '<ul class="notes">' + r.messages.map((m) => `<li>${m}</li>`).join('') + '</ul>';
+    D.$('#ca_rlres').innerHTML = html;
+    GC.plot.courbes(D.$('#ca_rlplot'), [
+      { name: 'Profil amont (torrentiel)', color: '#c0392b', data: r.profilSup },
+      { name: 'Profil aval (fluvial)', color: '#1b3a5b', data: r.profilSub }
+    ], { xlabel: 'x [m]', ylabel: 'y [m]', point: r.position != null ? { x: r.position, y: r.y2 } : null });
   }
 
   function ressaut() {
@@ -234,11 +264,12 @@
     D.$('#ep_sim').addEventListener('click', () => recupSim());
     D.$('#ca_remous').addEventListener('click', remous);
     D.$('#ca_ressaut').addEventListener('click', ressaut);
+    D.$('#ca_rlcalc').addEventListener('click', ressautLoc);
     const csv = D.$('#ep_csv');
     if (csv) csv.addEventListener('change', importerCSV);
     D.$('#ep_simcsv').addEventListener('click', () => recupSim(serieImportee));
     pluvial(); canal(); terr(); chaussee(); caniveau(); recupEP();
-    bassin(); recupSim(); remous(); ressaut();
+    bassin(); recupSim(); remous(); ressaut(); ressautLoc();
   }
 
   GC.modules = GC.modules || {};
